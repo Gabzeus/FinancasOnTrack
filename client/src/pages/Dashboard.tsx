@@ -16,6 +16,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { DollarSign, CreditCard, Activity } from 'lucide-react';
+import { ExpenseChart } from '@/components/ExpenseChart';
+import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -38,7 +42,6 @@ export default function Dashboard() {
   }, []);
 
   const handleTransactionAdded = (newTransaction) => {
-    // Add new transaction and re-sort by date
     setTransactions(
       [...transactions, newTransaction].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -132,50 +135,61 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Transações Recentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-right">Valor</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length > 0 ? (
-                  transactions.slice(0, 5).map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell>{t.description}</TableCell>
-                      <TableCell>{t.category}</TableCell>
-                      <TableCell>{formatDate(t.date)}</TableCell>
-                      <TableCell
-                        className={`text-right font-medium ${
-                          t.type === 'income'
-                            ? 'text-green-500'
-                            : 'text-red-500'
-                        }`}
-                      >
-                        {t.type === 'income' ? '+' : '-'}{' '}
-                        {formatCurrency(t.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center">
-                      Nenhuma transação encontrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="lg:col-span-4 grid gap-4">
+                <MonthlySummaryChart transactions={transactions} />
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Transações Recentes</CardTitle>
+                        <Button asChild variant="link">
+                            <Link to="/transactions">Ver todas</Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                        <TableHeader>
+                            <TableRow>
+                            <TableHead>Descrição</TableHead>
+                            <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+                            <TableHead className="hidden sm:table-cell">Data</TableHead>
+                            <TableHead className="text-right">Valor</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {transactions.length > 0 ? (
+                            transactions.slice(0, 5).map((t) => (
+                                <TableRow key={t.id}>
+                                <TableCell>{t.description}</TableCell>
+                                <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
+                                <TableCell className="hidden sm:table-cell">{formatDate(t.date)}</TableCell>
+                                <TableCell
+                                    className={`text-right font-medium ${
+                                    t.type === 'income'
+                                        ? 'text-green-500'
+                                        : 'text-red-500'
+                                    }`}
+                                >
+                                    {t.type === 'income' ? '+' : '-'}{' '}
+                                    {formatCurrency(t.amount)}
+                                </TableCell>
+                                </TableRow>
+                            ))
+                            ) : (
+                            <TableRow>
+                                <TableCell colSpan={4} className="text-center h-24">
+                                Nenhuma transação encontrada.
+                                </TableCell>
+                            </TableRow>
+                            )}
+                        </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+            <div className="lg:col-span-3">
+                <ExpenseChart transactions={transactions} />
+            </div>
+        </div>
       </div>
     </div>
   );

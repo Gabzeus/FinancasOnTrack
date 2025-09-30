@@ -1,8 +1,9 @@
 
 import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Wallet } from 'lucide-react';
+import { LayoutDashboard, Wallet, List } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
+import TransactionsPage from './pages/TransactionsPage';
 import { cn } from './lib/utils';
 
 function Sidebar() {
@@ -30,6 +31,18 @@ function Sidebar() {
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </NavLink>
+            <NavLink
+              to="/transactions"
+              className={({ isActive }) =>
+                cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
+                  isActive && 'bg-muted text-blue-700',
+                )
+              }
+            >
+              <List className="h-4 w-4" />
+              Transações
+            </NavLink>
           </nav>
         </div>
       </div>
@@ -43,9 +56,10 @@ function App() {
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <Sidebar />
         <div className="flex flex-col">
-          <main className="flex flex-1 flex-col gap-4 lg:gap-6">
+          <main className="flex flex-1 flex-col gap-4 lg:gap-6 bg-background">
             <Routes>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/transactions" element={<TransactionsPage />} />
             </Routes>
           </main>
         </div>
