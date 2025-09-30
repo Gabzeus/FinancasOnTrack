@@ -17,6 +17,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { AddTransactionForm } from '@/components/AddTransactionForm';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -39,6 +58,11 @@ export default function TransactionsPage() {
     category: 'all',
   });
 
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const [transactionToEdit, setTransactionToEdit] = React.useState(null);
+  const [transactionToDelete, setTransactionToDelete] = React.useState(null);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
+
   const fetchTransactions = async () => {
     try {
       const response = await fetch('/api/transactions');
@@ -47,7 +71,6 @@ export default function TransactionsPage() {
       }
       const data = await response.json();
       setTransactions(data);
-      setFilteredTransactions(data);
     } catch (error) {
       console.error(error);
     }
@@ -73,6 +96,42 @@ export default function TransactionsPage() {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleFormSubmit = (savedTransaction) => {
+    setTransactions(prev => 
+      [...prev.filter(t => t.id !== savedTransaction.id), savedTransaction]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    );
+  };
+
+  const handleEditClick = (transaction) => {
+    setTransactionToEdit(transaction);
+    setIsFormOpen(true);
+  };
+
+  const handleDeleteClick = (transaction) => {
+    setTransactionToDelete(transaction);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!transactionToDelete) return;
+    try {
+      const response = await fetch(`/api/transactions/${transactionToDelete.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete transaction');
+      }
+      setTransactions(prev => prev.filter(t => t.id !== transactionToDelete.id));
+    } catch (error) {
+      console.error(error);
+      alert('Failed to delete transaction.');
+    } finally {
+      setIsDeleteAlertOpen(false);
+      setTransactionToDelete(null);
+    }
   };
 
   const formatCurrency = (value) => {
@@ -120,48 +179,93 @@ export default function TransactionsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell>{t.description}</TableCell>
-                    <TableCell>{t.category}</TableCell>
-                    <TableCell>{formatDate(t.date)}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type === 'income' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
-                        {t.type === 'income' ? 'Receita' : 'Despesa'}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-medium ${
-                        t.type === 'income' ? 'text-green-500' : 'text-red-500'
-                      }`}
-                    >
-                      {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+                  <TableHead className="hidden md:table-cell">Data</TableHead>
+                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((t) => (
+                    <TableRow key={t.id}>
+                      <TableCell className="font-medium">{t.description}</TableCell>
+                      <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
+                      <TableCell className="hidden md:table-cell">{formatDate(t.date)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type === 'income' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                          {t.type === 'income' ? 'Receita' : 'Despesa'}
+                        </span>
+                      </TableCell>
+                      <TableCell
+                        className={`font-medium ${
+                          t.type === 'income' ? 'text-green-500' : 'text-red-500'
+                        }`}
+                      >
+                        {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Abrir menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-red-500 focus:text-red-500">
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center h-24">
+                      Nenhuma transação encontrada.
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center h-24">
-                    Nenhuma transação encontrada.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
+
+      <AddTransactionForm
+        open={isFormOpen}
+        setOpen={setIsFormOpen}
+        onFormSubmit={handleFormSubmit}
+        transactionToEdit={transactionToEdit}
+      />
+
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. Isso excluirá permanentemente a transação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setTransactionToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className={buttonVariants({ variant: "destructive" })}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

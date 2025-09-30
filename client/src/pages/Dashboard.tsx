@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CreditCard, Activity } from 'lucide-react';
+import { DollarSign, CreditCard, Activity, PlusCircle } from 'lucide-react';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
+  const [isFormOpen, setIsFormOpen] = React.useState(false);
 
   const fetchTransactions = async () => {
     try {
@@ -41,11 +42,11 @@ export default function Dashboard() {
     fetchTransactions();
   }, []);
 
-  const handleTransactionAdded = (newTransaction) => {
-    setTransactions(
-      [...transactions, newTransaction].sort(
-        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-      ),
+  const handleFormSubmit = (savedTransaction) => {
+    // This handles both add and edit, but on dashboard we only add
+    setTransactions(prev => 
+      [...prev.filter(t => t.id !== savedTransaction.id), savedTransaction]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     );
   };
 
@@ -83,7 +84,16 @@ export default function Dashboard() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
-          <AddTransactionForm onTransactionAdded={handleTransactionAdded} />
+           <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => setIsFormOpen(true)}>
+              <PlusCircle className="mr-2" />
+              Adicionar Transação
+            </Button>
+            <AddTransactionForm 
+              open={isFormOpen}
+              setOpen={setIsFormOpen}
+              onFormSubmit={handleFormSubmit}
+              transactionToEdit={null}
+            />
         </div>
       </div>
       <div className="space-y-4">

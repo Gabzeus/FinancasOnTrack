@@ -15,11 +15,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
-import { PlusCircle } from 'lucide-react';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -32,19 +30,44 @@ const expenseCategories = [
   'Outros',
 ];
 
-export function AddTransactionForm({ onTransactionAdded }) {
-  const [open, setOpen] = React.useState(false);
+export function AddTransactionForm({
+  open,
+  setOpen,
+  onFormSubmit,
+  transactionToEdit,
+}) {
   const [type, setType] = React.useState('expense');
   const [category, setCategory] = React.useState('');
   const [amount, setAmount] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
 
+  const isEditMode = !!transactionToEdit;
+
+  React.useEffect(() => {
+    if (isEditMode) {
+      setType(transactionToEdit.type);
+      setCategory(transactionToEdit.category);
+      setAmount(transactionToEdit.amount.toString());
+      setDescription(transactionToEdit.description);
+      setDate(transactionToEdit.date.split('T')[0]);
+    } else {
+      // Reset form for adding
+      setType('expense');
+      setCategory('');
+      setAmount('');
+      setDescription('');
+      setDate(new Date().toISOString().split('T')[0]);
+    }
+  }, [transactionToEdit, isEditMode, open]);
+
   const categories = type === 'income' ? incomeCategories : expenseCategories;
 
   React.useEffect(() => {
+    // Reset category if type changes, but not on initial load in edit mode
+    if (transactionToEdit && type === transactionToEdit.type) return;
     setCategory('');
-  }, [type]);
+  }, [type, transactionToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +76,14 @@ export function AddTransactionForm({ onTransactionAdded }) {
       return;
     }
 
+    const url = isEditMode
+      ? `/api/transactions/${transactionToEdit.id}`
+      : '/api/transactions';
+    const method = isEditMode ? 'PUT' : 'POST';
+
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -69,36 +97,25 @@ export function AddTransactionForm({ onTransactionAdded }) {
       });
 
       if (!response.ok) {
-        throw new Error('Falha ao adicionar transação');
+        throw new Error('Falha ao salvar transação');
       }
 
-      const newTransaction = await response.json();
-      onTransactionAdded(newTransaction);
-
-      // Reset form and close dialog
+      const savedTransaction = await response.json();
+      onFormSubmit(savedTransaction);
       setOpen(false);
-      setType('expense');
-      setCategory('');
-      setAmount('');
-      setDescription('');
-      setDate(new Date().toISOString().split('T')[0]);
     } catch (error) {
       console.error(error);
-      alert('Ocorreu um erro ao adicionar a transação.');
+      alert('Ocorreu um erro ao salvar a transação.');
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-blue-700 hover:bg-blue-800">
-          <PlusCircle className="mr-2" />
-          Adicionar Transação
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Nova Transação</DialogTitle>
+          <DialogTitle>
+            {isEditMode ? 'Editar Transação' : 'Adicionar Nova Transação'}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
@@ -175,7 +192,9 @@ export function AddTransactionForm({ onTransactionAdded }) {
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit" className="bg-blue-700 hover:bg-blue-800">Salvar</Button>
+            <Button type="submit" className="bg-blue-700 hover:bg-blue-800">
+              Salvar
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
