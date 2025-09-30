@@ -1,7 +1,8 @@
+
 {
-  "name": "Instance app",
-  "short_name": "",
-  "description": "",
+  "name": "FinTrack",
+  "short_name": "FinTrack",
+  "description": "A modern and easy-to-use personal finance management application.",
   "start_url": "/",
   "scope": "/",
   "icons": [
@@ -16,9 +17,9 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "background_color": "#000000",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "categories": ["productivity", "utilities"]
+  "categories": ["productivity", "utilities", "finance"]
 }
