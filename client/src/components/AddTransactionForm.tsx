@@ -91,7 +91,7 @@ export function AddTransactionForm({ onTransactionAdded }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="bg-blue-700 hover:bg-blue-800">
           <PlusCircle className="mr-2" />
           Adicionar Transação
         </Button>
@@ -175,7 +175,7 @@ export function AddTransactionForm({ onTransactionAdded }) {
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit">Salvar</Button>
+            <Button type="submit" className="bg-blue-700 hover:bg-blue-800">Salvar</Button>
           </DialogFooter>
         </form>
       </DialogContent>
