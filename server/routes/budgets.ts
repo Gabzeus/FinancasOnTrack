@@ -54,8 +54,7 @@ router.post('/', async (req, res) => {
         month,
       })
       .onConflict((oc) => oc
-        .where('category', '=', category)
-        .where('month', '=', month)
+        .columns(['category', 'month'])
         .doUpdateSet({ amount: parseFloat(amount) })
       )
       .returningAll()
