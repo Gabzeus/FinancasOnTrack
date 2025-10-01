@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CreditCard, Activity, PlusCircle } from 'lucide-react';
+import { DollarSign, CreditCard, Wallet, PlusCircle } from 'lucide-react';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
@@ -39,8 +39,7 @@ export default function Dashboard() {
       const cardsData = await cardsRes.json();
       setTransactions(transactionsData);
       setCreditCards(cardsData);
-    } catch (error) {
-      console.error(error);
+    } catch (error)      console.error(error);
     }
   };
 
@@ -68,19 +67,29 @@ export default function Dashboard() {
     });
   };
 
-  const { totalIncome, totalExpenses, balance } = React.useMemo(() => {
+  const { totalIncome, totalExpenses, cardExpenses, cashExpenses } = React.useMemo(() => {
     const income = transactions
       .filter((t) => t.type === 'income')
       .reduce((acc, t) => acc + t.amount, 0);
 
     const expenses = transactions
-      .filter((t) => t.type === 'expense')
+      .filter((t) => t.type === 'expense');
+      
+    const totalExpenses = expenses.reduce((acc, t) => acc + t.amount, 0);
+
+    const cardExpenses = expenses
+      .filter(t => t.credit_card_id !== null)
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const cashExpenses = expenses
+      .filter(t => t.credit_card_id === null)
       .reduce((acc, t) => acc + t.amount, 0);
 
     return {
       totalIncome: income,
-      totalExpenses: expenses,
-      balance: income - expenses,
+      totalExpenses: totalExpenses,
+      cardExpenses,
+      cashExpenses,
     };
   }, [transactions]);
 
@@ -118,7 +127,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Despesa Total</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-500">
@@ -128,26 +137,24 @@ export default function Dashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Despesas (Cartão)</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div
-                className={`text-2xl font-bold ${
-                  balance >= 0 ? 'text-green-500' : 'text-red-500'
-                }`}
-              >
-                {formatCurrency(balance)}
+              <div className="text-2xl font-bold text-red-500">
+                {formatCurrency(cardExpenses)}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Transações</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Despesas (Dinheiro)</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">+{transactions.length}</div>
+              <div className="text-2xl font-bold text-red-500">
+                {formatCurrency(cashExpenses)}
+              </div>
             </CardContent>
           </Card>
         </div>

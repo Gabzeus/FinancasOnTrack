@@ -8,18 +8,21 @@ const router = express.Router();
 // Get budgets for a specific month with spent amount
 router.get('/:year/:month', async (req, res) => {
   const { year, month } = req.params;
-  const monthStr = `${year}-${month.padStart(2, '0')}`;
+  const startDate = `${year}-${month.padStart(2, '0')}-01`;
+  const endDate = new Date(parseInt(year), parseInt(month), 0).getDate();
+  const fullEndDate = `${year}-${month.padStart(2, '0')}-${endDate}`;
 
   try {
     const budgets = await db.selectFrom('budgets')
-      .where('month', '=', monthStr)
+      .where('month', '=', `${year}-${month.padStart(2, '0')}`)
       .selectAll()
       .execute();
 
     const expenses = await db.selectFrom('transactions')
       .select(['category', sql<number>`sum(amount)`.as('spent')])
       .where('type', '=', 'expense')
-      .where(sql`strftime('%Y-%m', date)`, '=', monthStr)
+      .where('date', '>=', startDate)
+      .where('date', '<=', fullEndDate)
       .groupBy('category')
       .execute();
 

@@ -43,7 +43,7 @@ export default function BudgetsPage() {
 
   const fetchBudgets = async () => {
     const year = currentMonth.getFullYear();
-    const month = (currentMonth.getMonth() + 1).toString().padStart(2, '0');
+    const month = (currentMonth.getMonth() + 1).toString();
     try {
       const response = await fetch(`/api/budgets/${year}/${month}`);
       if (!response.ok) {
@@ -139,7 +139,6 @@ export default function BudgetsPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {budgets.map((budget) => {
             const percentage = budget.amount > 0 ? (budget.spent / budget.amount) * 100 : 0;
-            const progressColor = percentage > 100 ? 'bg-red-500' : 'bg-primary';
             return (
               <Card key={budget.id}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -168,9 +167,7 @@ export default function BudgetsPage() {
                   <p className="text-xs text-muted-foreground">
                     Gasto: {formatCurrency(budget.spent)}
                   </p>
-                  <Progress value={Math.min(percentage, 100)} className="mt-4 h-2">
-                    <div className={`h-full ${progressColor}`} style={{ width: `${Math.min(percentage, 100)}%` }} />
-                  </Progress>
+                  <Progress value={percentage} className="mt-4 h-2" />
                 </CardContent>
               </Card>
             );
