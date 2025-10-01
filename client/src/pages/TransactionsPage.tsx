@@ -51,6 +51,7 @@ const allCategories = [...new Set([...incomeCategories, ...expenseCategories])];
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = React.useState([]);
+  const [creditCards, setCreditCards] = React.useState([]);
   const [filteredTransactions, setFilteredTransactions] = React.useState([]);
   const [filters, setFilters] = React.useState({
     description: '',
@@ -63,21 +64,26 @@ export default function TransactionsPage() {
   const [transactionToDelete, setTransactionToDelete] = React.useState(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
 
-  const fetchTransactions = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/transactions');
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+      const [transactionsRes, cardsRes] = await Promise.all([
+        fetch('/api/transactions'),
+        fetch('/api/credit-cards'),
+      ]);
+      if (!transactionsRes.ok || !cardsRes.ok) {
+        throw new Error('Failed to fetch data');
       }
-      const data = await response.json();
-      setTransactions(data);
+      const transactionsData = await transactionsRes.json();
+      const cardsData = await cardsRes.json();
+      setTransactions(transactionsData);
+      setCreditCards(cardsData);
     } catch (error) {
       console.error(error);
     }
   };
 
   React.useEffect(() => {
-    fetchTransactions();
+    fetchData();
   }, []);
 
   React.useEffect(() => {
@@ -195,7 +201,10 @@ export default function TransactionsPage() {
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.map((t) => (
                     <TableRow key={t.id}>
-                      <TableCell className="font-medium">{t.description}</TableCell>
+                      <TableCell className="font-medium">
+                        <div>{t.description}</div>
+                        {t.credit_card_name && <div className="text-xs text-muted-foreground">{t.credit_card_name}</div>}
+                      </TableCell>
                       <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
                       <TableCell className="hidden md:table-cell">{formatDate(t.date)}</TableCell>
                       <TableCell className="hidden md:table-cell">
@@ -250,6 +259,7 @@ export default function TransactionsPage() {
         setOpen={setIsFormOpen}
         onFormSubmit={handleFormSubmit}
         transactionToEdit={transactionToEdit}
+        creditCards={creditCards}
       />
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>

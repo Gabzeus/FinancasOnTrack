@@ -7,7 +7,22 @@ const router = express.Router();
 // Get all transactions
 router.get('/', async (req, res) => {
   try {
-    const transactions = await db.selectFrom('transactions').selectAll().orderBy('date', 'desc').execute();
+    const transactions = await db
+      .selectFrom('transactions')
+      .leftJoin('credit_cards', 'credit_cards.id', 'transactions.credit_card_id')
+      .select([
+        'transactions.id',
+        'transactions.type',
+        'transactions.amount',
+        'transactions.description',
+        'transactions.category',
+        'transactions.date',
+        'transactions.credit_card_id',
+        'credit_cards.name as credit_card_name'
+      ])
+      .orderBy('date', 'desc')
+      .orderBy('transactions.id', 'desc')
+      .execute();
     res.json(transactions);
   } catch (error) {
     console.error('Failed to fetch transactions:', error);
@@ -17,7 +32,7 @@ router.get('/', async (req, res) => {
 
 // Add a new transaction
 router.post('/', async (req, res) => {
-  const { type, amount, description, category, date } = req.body;
+  const { type, amount, description, category, date, credit_card_id } = req.body;
 
   if (!type || !amount || !description || !category || !date) {
     res.status(400).json({ message: 'All fields are required' });
@@ -33,10 +48,29 @@ router.post('/', async (req, res) => {
         description,
         category,
         date,
+        credit_card_id: type === 'expense' ? credit_card_id : null,
       })
       .returningAll()
       .executeTakeFirstOrThrow();
-    res.status(201).json(newTransaction);
+    
+    // Fetch the full transaction with card name to return to client
+    const result = await db
+      .selectFrom('transactions')
+      .leftJoin('credit_cards', 'credit_cards.id', 'transactions.credit_card_id')
+      .select([
+        'transactions.id',
+        'transactions.type',
+        'transactions.amount',
+        'transactions.description',
+        'transactions.category',
+        'transactions.date',
+        'transactions.credit_card_id',
+        'credit_cards.name as credit_card_name'
+      ])
+      .where('transactions.id', '=', newTransaction.id)
+      .executeTakeFirstOrThrow();
+
+    res.status(201).json(result);
   } catch (error) {
     console.error('Failed to add transaction:', error);
     res.status(500).json({ message: 'Failed to add transaction' });
@@ -46,7 +80,7 @@ router.post('/', async (req, res) => {
 // Update a transaction
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
-    const { type, amount, description, category, date } = req.body;
+    const { type, amount, description, category, date, credit_card_id } = req.body;
 
     if (!type || !amount || !description || !category || !date) {
         res.status(400).json({ message: 'All fields are required' });
@@ -62,6 +96,7 @@ router.put('/:id', async (req, res) => {
                 description,
                 category,
                 date,
+                credit_card_id: type === 'expense' ? credit_card_id : null,
             })
             .where('id', '=', parseInt(id, 10))
             .returningAll()
@@ -71,7 +106,25 @@ router.put('/:id', async (req, res) => {
             res.status(404).json({ message: 'Transaction not found' });
             return;
         }
-        res.json(updatedTransaction);
+        
+        // Fetch the full transaction with card name to return to client
+        const result = await db
+          .selectFrom('transactions')
+          .leftJoin('credit_cards', 'credit_cards.id', 'transactions.credit_card_id')
+          .select([
+            'transactions.id',
+            'transactions.type',
+            'transactions.amount',
+            'transactions.description',
+            'transactions.category',
+            'transactions.date',
+            'transactions.credit_card_id',
+            'credit_cards.name as credit_card_name'
+          ])
+          .where('transactions.id', '=', updatedTransaction.id)
+          .executeTakeFirstOrThrow();
+
+        res.json(result);
     } catch (error) {
         console.error('Failed to update transaction:', error);
         res.status(500).json({ message: 'Failed to update transaction' });

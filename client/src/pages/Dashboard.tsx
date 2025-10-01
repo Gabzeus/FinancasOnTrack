@@ -23,27 +23,32 @@ import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
+  const [creditCards, setCreditCards] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
 
-  const fetchTransactions = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/transactions');
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+      const [transactionsRes, cardsRes] = await Promise.all([
+        fetch('/api/transactions'),
+        fetch('/api/credit-cards'),
+      ]);
+      if (!transactionsRes.ok || !cardsRes.ok) {
+        throw new Error('Failed to fetch data');
       }
-      const data = await response.json();
-      setTransactions(data);
+      const transactionsData = await transactionsRes.json();
+      const cardsData = await cardsRes.json();
+      setTransactions(transactionsData);
+      setCreditCards(cardsData);
     } catch (error) {
       console.error(error);
     }
   };
 
   React.useEffect(() => {
-    fetchTransactions();
+    fetchData();
   }, []);
 
   const handleFormSubmit = (savedTransaction) => {
-    // This handles both add and edit, but on dashboard we only add
     setTransactions(prev => 
       [...prev.filter(t => t.id !== savedTransaction.id), savedTransaction]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -93,6 +98,7 @@ export default function Dashboard() {
               setOpen={setIsFormOpen}
               onFormSubmit={handleFormSubmit}
               transactionToEdit={null}
+              creditCards={creditCards}
             />
         </div>
       </div>
@@ -169,7 +175,10 @@ export default function Dashboard() {
                             {transactions.length > 0 ? (
                             transactions.slice(0, 5).map((t) => (
                                 <TableRow key={t.id}>
-                                <TableCell>{t.description}</TableCell>
+                                <TableCell>
+                                  <div>{t.description}</div>
+                                  {t.credit_card_name && <div className="text-xs text-muted-foreground">{t.credit_card_name}</div>}
+                                </TableCell>
                                 <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
                                 <TableCell className="hidden sm:table-cell">{formatDate(t.date)}</TableCell>
                                 <TableCell

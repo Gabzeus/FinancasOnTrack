@@ -8,6 +8,7 @@ export interface TransactionsTable {
   description: string;
   category: string;
   date: string; // ISO 8601 format
+  credit_card_id: number | null;
 }
 
 export interface CreditCardsTable {
@@ -18,7 +19,15 @@ export interface CreditCardsTable {
   due_day: number;
 }
 
+export interface BudgetsTable {
+  id: Generated<number>;
+  category: string;
+  amount: number;
+  month: string; // YYYY-MM format
+}
+
 export interface Database {
   transactions: TransactionsTable;
   credit_cards: CreditCardsTable;
+  budgets: BudgetsTable;
 }

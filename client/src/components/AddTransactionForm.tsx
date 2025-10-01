@@ -35,22 +35,25 @@ export function AddTransactionForm({
   setOpen,
   onFormSubmit,
   transactionToEdit,
+  creditCards = [],
 }) {
   const [type, setType] = React.useState('expense');
   const [category, setCategory] = React.useState('');
   const [amount, setAmount] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
+  const [creditCardId, setCreditCardId] = React.useState('');
 
   const isEditMode = !!transactionToEdit;
 
   React.useEffect(() => {
-    if (isEditMode) {
+    if (isEditMode && transactionToEdit) {
       setType(transactionToEdit.type);
       setCategory(transactionToEdit.category);
       setAmount(transactionToEdit.amount.toString());
       setDescription(transactionToEdit.description);
       setDate(transactionToEdit.date.split('T')[0]);
+      setCreditCardId(transactionToEdit.credit_card_id?.toString() || '');
     } else {
       // Reset form for adding
       setType('expense');
@@ -58,6 +61,7 @@ export function AddTransactionForm({
       setAmount('');
       setDescription('');
       setDate(new Date().toISOString().split('T')[0]);
+      setCreditCardId('');
     }
   }, [transactionToEdit, isEditMode, open]);
 
@@ -81,19 +85,22 @@ export function AddTransactionForm({
       : '/api/transactions';
     const method = isEditMode ? 'PUT' : 'POST';
 
+    const body = {
+      type,
+      amount: parseFloat(amount),
+      description,
+      category,
+      date,
+      credit_card_id: creditCardId ? parseInt(creditCardId, 10) : null,
+    };
+
     try {
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          type,
-          amount: parseFloat(amount),
-          description,
-          category,
-          date,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -174,6 +181,26 @@ export function AddTransactionForm({
               </SelectContent>
             </Select>
           </div>
+          {type === 'expense' && creditCards.length > 0 && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="creditCard" className="text-right">
+                Cartão
+              </Label>
+              <Select value={creditCardId} onValueChange={setCreditCardId}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Nenhum (Débito/Dinheiro)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhum (Débito/Dinheiro)</SelectItem>
+                  {creditCards.map((card) => (
+                    <SelectItem key={card.id} value={card.id.toString()}>
+                      {card.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="date" className="text-right">
               Data
