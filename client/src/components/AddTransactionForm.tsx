@@ -91,7 +91,7 @@ export function AddTransactionForm({
       description,
       category,
       date,
-      credit_card_id: creditCardId ? parseInt(creditCardId, 10) : null,
+      credit_card_id: (creditCardId && creditCardId !== 'none') ? parseInt(creditCardId, 10) : null,
     };
 
     try {
@@ -191,7 +191,7 @@ export function AddTransactionForm({
                   <SelectValue placeholder="Nenhum (Débito/Dinheiro)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum (Débito/Dinheiro)</SelectItem>
+                  <SelectItem value="none">Nenhum (Débito/Dinheiro)</SelectItem>
                   {creditCards.map((card) => (
                     <SelectItem key={card.id} value={card.id.toString()}>
                       {card.name}
