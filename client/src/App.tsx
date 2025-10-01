@@ -1,9 +1,11 @@
 
 import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Wallet, List, Menu } from 'lucide-react';
+import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
+import CreditCardsPage from './pages/CreditCardsPage';
+import BudgetsPage from './pages/BudgetsPage';
 import { cn } from './lib/utils';
 import {
   Sheet,
@@ -39,6 +41,30 @@ function SidebarNav() {
       >
         <List className="h-4 w-4" />
         Transações
+      </NavLink>
+      <NavLink
+        to="/credit-cards"
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
+            isActive && 'bg-muted text-blue-700',
+          )
+        }
+      >
+        <CreditCard className="h-4 w-4" />
+        Cartões
+      </NavLink>
+      <NavLink
+        to="/budgets"
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
+            isActive && 'bg-muted text-blue-700',
+          )
+        }
+      >
+        <Target className="h-4 w-4" />
+        Orçamentos
       </NavLink>
     </nav>
   );
@@ -103,6 +129,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/credit-cards" element={<CreditCardsPage />} />
+              <Route path="/budgets" element={<BudgetsPage />} />
             </Routes>
           </main>
         </div>
