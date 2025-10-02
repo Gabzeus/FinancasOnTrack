@@ -39,7 +39,8 @@ export default function Dashboard() {
       const cardsData = await cardsRes.json();
       setTransactions(transactionsData);
       setCreditCards(cardsData);
-    } catch (error)      console.error(error);
+    } catch (error) {
+      console.error(error);
     }
   };
 
