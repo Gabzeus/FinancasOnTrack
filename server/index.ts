@@ -6,6 +6,7 @@ import transactionsRouter from './routes/transactions';
 import creditCardsRouter from './routes/creditCards';
 import budgetsRouter from './routes/budgets';
 import goalsRouter from './routes/goals';
+import recurringTransactionsRouter from './routes/recurringTransactions';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/credit-cards', creditCardsRouter);
 app.use('/api/budgets', budgetsRouter);
 app.use('/api/goals', goalsRouter);
+app.use('/api/recurring-transactions', recurringTransactionsRouter);
 
 // Export a function to start the server
 export async function startServer(port) {

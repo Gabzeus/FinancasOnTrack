@@ -34,9 +34,22 @@ export interface GoalsTable {
   target_date: string | null; // ISO 8601 format
 }
 
+export interface RecurringTransactionsTable {
+    id: Generated<number>;
+    description: string;
+    amount: number;
+    type: 'income' | 'expense';
+    category: string;
+    frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    start_date: string; // ISO 8601 format
+    end_date: string | null; // ISO 8601 format
+    credit_card_id: number | null;
+}
+
 export interface Database {
   transactions: TransactionsTable;
   credit_cards: CreditCardsTable;
   budgets: BudgetsTable;
   goals: GoalsTable;
+  recurring_transactions: RecurringTransactionsTable;
 }
