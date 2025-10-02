@@ -7,6 +7,7 @@ import creditCardsRouter from './routes/creditCards';
 import budgetsRouter from './routes/budgets';
 import goalsRouter from './routes/goals';
 import recurringTransactionsRouter from './routes/recurringTransactions';
+import { processRecurringTransactions } from './services/recurringProcessor.js';
 
 dotenv.config();
 
@@ -23,6 +24,20 @@ app.use('/api/budgets', budgetsRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/recurring-transactions', recurringTransactionsRouter);
 
+// Function to set up and run the recurring transaction processor
+function setupRecurringProcessor() {
+  // Run once on startup
+  processRecurringTransactions().catch(console.error);
+
+  // Then run every 24 hours
+  const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
+  setInterval(() => {
+    processRecurringTransactions().catch(console.error);
+  }, twentyFourHoursInMs);
+
+  console.log('Recurring transaction processor scheduled to run every 24 hours.');
+}
+
 // Export a function to start the server
 export async function startServer(port) {
   try {
@@ -31,6 +46,8 @@ export async function startServer(port) {
     }
     app.listen(port, () => {
       console.log(`API Server running on port ${port}`);
+      // Setup the recurring processor after the server starts
+      setupRecurringProcessor();
     });
   } catch (err) {
     console.error('Failed to start server:', err);
