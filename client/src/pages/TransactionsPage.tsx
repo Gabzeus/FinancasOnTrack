@@ -45,6 +45,7 @@ const expenseCategories = [
   'Lazer',
   'Saúde',
   'Educação',
+  'Assinaturas',
   'Outros',
 ];
 const allCategories = [...new Set([...incomeCategories, ...expenseCategories])];
@@ -52,6 +53,7 @@ const allCategories = [...new Set([...incomeCategories, ...expenseCategories])];
 export default function TransactionsPage() {
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
+  const [goals, setGoals] = React.useState([]);
   const [filteredTransactions, setFilteredTransactions] = React.useState([]);
   const [filters, setFilters] = React.useState({
     description: '',
@@ -66,17 +68,20 @@ export default function TransactionsPage() {
 
   const fetchData = async () => {
     try {
-      const [transactionsRes, cardsRes] = await Promise.all([
+      const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
         fetch('/api/transactions'),
         fetch('/api/credit-cards'),
+        fetch('/api/goals'),
       ]);
-      if (!transactionsRes.ok || !cardsRes.ok) {
+      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok) {
         throw new Error('Failed to fetch data');
       }
       const transactionsData = await transactionsRes.json();
       const cardsData = await cardsRes.json();
+      const goalsData = await goalsRes.json();
       setTransactions(transactionsData);
       setCreditCards(cardsData);
+      setGoals(goalsData);
     } catch (error) {
       console.error(error);
     }
@@ -105,10 +110,8 @@ export default function TransactionsPage() {
   };
 
   const handleFormSubmit = (savedTransaction) => {
-    setTransactions(prev => 
-      [...prev.filter(t => t.id !== savedTransaction.id), savedTransaction]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    );
+    // Refetch all data to ensure consistency
+    fetchData();
   };
 
   const handleEditClick = (transaction) => {
@@ -130,7 +133,8 @@ export default function TransactionsPage() {
       if (!response.ok) {
         throw new Error('Failed to delete transaction');
       }
-      setTransactions(prev => prev.filter(t => t.id !== transactionToDelete.id));
+      // Refetch data after delete
+      fetchData();
     } catch (error) {
       console.error(error);
       alert('Failed to delete transaction.');
@@ -260,6 +264,7 @@ export default function TransactionsPage() {
         onFormSubmit={handleFormSubmit}
         transactionToEdit={transactionToEdit}
         creditCards={creditCards}
+        goals={goals}
       />
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>

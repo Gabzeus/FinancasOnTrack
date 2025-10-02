@@ -27,6 +27,7 @@ const expenseCategories = [
   'Lazer',
   'Saúde',
   'Educação',
+  'Assinaturas',
   'Outros',
 ];
 
@@ -36,6 +37,7 @@ export function AddTransactionForm({
   onFormSubmit,
   transactionToEdit,
   creditCards = [],
+  goals = [],
 }) {
   const [type, setType] = React.useState('expense');
   const [category, setCategory] = React.useState('');
@@ -43,6 +45,7 @@ export function AddTransactionForm({
   const [description, setDescription] = React.useState('');
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [creditCardId, setCreditCardId] = React.useState('');
+  const [goalId, setGoalId] = React.useState('');
 
   const isEditMode = !!transactionToEdit;
 
@@ -54,6 +57,7 @@ export function AddTransactionForm({
       setDescription(transactionToEdit.description);
       setDate(transactionToEdit.date.split('T')[0]);
       setCreditCardId(transactionToEdit.credit_card_id?.toString() || '');
+      setGoalId(''); // Editing goal allocation is not supported
     } else {
       // Reset form for adding
       setType('expense');
@@ -62,6 +66,7 @@ export function AddTransactionForm({
       setDescription('');
       setDate(new Date().toISOString().split('T')[0]);
       setCreditCardId('');
+      setGoalId('');
     }
   }, [transactionToEdit, isEditMode, open]);
 
@@ -92,6 +97,7 @@ export function AddTransactionForm({
       category,
       date,
       credit_card_id: (creditCardId && creditCardId !== 'none') ? parseInt(creditCardId, 10) : null,
+      goal_id: (goalId && goalId !== 'none') ? parseInt(goalId, 10) : null,
     };
 
     try {
@@ -129,7 +135,7 @@ export function AddTransactionForm({
             <Label htmlFor="type" className="text-right">
               Tipo
             </Label>
-            <Select value={type} onValueChange={setType}>
+            <Select value={type} onValueChange={setType} disabled={isEditMode}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
@@ -195,6 +201,26 @@ export function AddTransactionForm({
                   {creditCards.map((card) => (
                     <SelectItem key={card.id} value={card.id.toString()}>
                       {card.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {type === 'income' && goals.length > 0 && !isEditMode && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="goal" className="text-right">
+                Alocar na Meta
+              </Label>
+              <Select value={goalId} onValueChange={setGoalId}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Nenhuma" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhuma</SelectItem>
+                  {goals.map((goal) => (
+                    <SelectItem key={goal.id} value={goal.id.toString()}>
+                      {goal.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -24,21 +24,25 @@ import { Button } from '@/components/ui/button';
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
+  const [goals, setGoals] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
 
   const fetchData = async () => {
     try {
-      const [transactionsRes, cardsRes] = await Promise.all([
+      const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
         fetch('/api/transactions'),
         fetch('/api/credit-cards'),
+        fetch('/api/goals'),
       ]);
-      if (!transactionsRes.ok || !cardsRes.ok) {
+      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok) {
         throw new Error('Failed to fetch data');
       }
       const transactionsData = await transactionsRes.json();
       const cardsData = await cardsRes.json();
+      const goalsData = await goalsRes.json();
       setTransactions(transactionsData);
       setCreditCards(cardsData);
+      setGoals(goalsData);
     } catch (error) {
       console.error(error);
     }
@@ -49,10 +53,8 @@ export default function Dashboard() {
   }, []);
 
   const handleFormSubmit = (savedTransaction) => {
-    setTransactions(prev => 
-      [...prev.filter(t => t.id !== savedTransaction.id), savedTransaction]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    );
+    // Refetch all data to ensure consistency, especially for goals
+    fetchData();
   };
 
   const formatCurrency = (value) => {
@@ -109,6 +111,7 @@ export default function Dashboard() {
               onFormSubmit={handleFormSubmit}
               transactionToEdit={null}
               creditCards={creditCards}
+              goals={goals}
             />
         </div>
       </div>

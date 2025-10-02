@@ -9,6 +9,7 @@ export interface TransactionsTable {
   category: string;
   date: string; // ISO 8601 format
   credit_card_id: number | null;
+  goal_id: number | null;
 }
 
 export interface CreditCardsTable {
