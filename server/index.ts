@@ -5,6 +5,7 @@ import { setupStaticServing } from './static-serve.js';
 import transactionsRouter from './routes/transactions';
 import creditCardsRouter from './routes/creditCards';
 import budgetsRouter from './routes/budgets';
+import goalsRouter from './routes/goals';
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/credit-cards', creditCardsRouter);
 app.use('/api/budgets', budgetsRouter);
+app.use('/api/goals', goalsRouter);
 
 // Export a function to start the server
 export async function startServer(port) {

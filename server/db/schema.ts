@@ -26,8 +26,17 @@ export interface BudgetsTable {
   month: string; // YYYY-MM format
 }
 
+export interface GoalsTable {
+  id: Generated<number>;
+  name: string;
+  target_amount: number;
+  current_amount: number;
+  target_date: string | null; // ISO 8601 format
+}
+
 export interface Database {
   transactions: TransactionsTable;
   credit_cards: CreditCardsTable;
   budgets: BudgetsTable;
+  goals: GoalsTable;
 }

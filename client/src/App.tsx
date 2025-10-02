@@ -1,11 +1,12 @@
 
 import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target } from 'lucide-react';
+import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target, PiggyBank } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
 import CreditCardsPage from './pages/CreditCardsPage';
 import BudgetsPage from './pages/BudgetsPage';
+import GoalsPage from './pages/GoalsPage';
 import { cn } from './lib/utils';
 import {
   Sheet,
@@ -65,6 +66,18 @@ function SidebarNav() {
       >
         <Target className="h-4 w-4" />
         Orçamentos
+      </NavLink>
+      <NavLink
+        to="/goals"
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
+            isActive && 'bg-muted text-blue-700',
+          )
+        }
+      >
+        <PiggyBank className="h-4 w-4" />
+        Metas
       </NavLink>
     </nav>
   );
@@ -131,6 +144,7 @@ function App() {
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/credit-cards" element={<CreditCardsPage />} />
               <Route path="/budgets" element={<BudgetsPage />} />
+              <Route path="/goals" element={<GoalsPage />} />
             </Routes>
           </main>
         </div>
