@@ -20,6 +20,7 @@ import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { BalanceCard } from '@/components/BalanceCard';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -117,6 +118,7 @@ export default function Dashboard() {
       </div>
       <div className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <BalanceCard totalIncome={totalIncome} totalExpenses={totalExpenses} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
@@ -147,17 +149,6 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold text-red-500">
                 {formatCurrency(cardExpenses)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Despesas (Dinheiro)</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-500">
-                {formatCurrency(cashExpenses)}
               </div>
             </CardContent>
           </Card>
