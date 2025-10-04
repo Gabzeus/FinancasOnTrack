@@ -1,13 +1,19 @@
 
 import express from 'express';
 import { db } from '../db/database';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get all credit cards
-router.get('/', async (req, res) => {
+// Get all credit cards for the logged-in user
+router.get('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   try {
-    const cards = await db.selectFrom('credit_cards').selectAll().orderBy('name', 'asc').execute();
+    const cards = await db.selectFrom('credit_cards')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .orderBy('name', 'asc')
+      .execute();
     res.json(cards);
   } catch (error) {
     console.error('Failed to fetch credit cards:', error);
@@ -15,8 +21,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Add a new credit card
-router.post('/', async (req, res) => {
+// Add a new credit card for the logged-in user
+router.post('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   const { name, limit_amount, closing_day, due_day } = req.body;
 
   if (!name || limit_amount === undefined || !closing_day || !due_day) {
@@ -28,6 +35,7 @@ router.post('/', async (req, res) => {
     const newCard = await db
       .insertInto('credit_cards')
       .values({
+        user_id: userId,
         name,
         limit_amount: parseFloat(limit_amount),
         closing_day: parseInt(closing_day, 10),
@@ -42,8 +50,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a credit card
-router.put('/:id', async (req, res) => {
+// Update a credit card for the logged-in user
+router.put('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
     const { name, limit_amount, closing_day, due_day } = req.body;
 
@@ -62,6 +71,7 @@ router.put('/:id', async (req, res) => {
                 due_day: parseInt(due_day, 10),
             })
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .returningAll()
             .executeTakeFirst();
 
@@ -76,14 +86,16 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete a credit card
-router.delete('/:id', async (req, res) => {
+// Delete a credit card for the logged-in user
+router.delete('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
 
     try {
         const result = await db
             .deleteFrom('credit_cards')
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .executeTakeFirst();
 
         if (result.numDeletedRows === 0n) {
@@ -97,6 +109,5 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Failed to delete credit card' });
     }
 });
-
 
 export default router;

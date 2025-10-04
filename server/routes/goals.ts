@@ -1,13 +1,19 @@
 
 import express from 'express';
 import { db } from '../db/database';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get all goals
-router.get('/', async (req, res) => {
+// Get all goals for the logged-in user
+router.get('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   try {
-    const goals = await db.selectFrom('goals').selectAll().orderBy('target_date', 'asc').execute();
+    const goals = await db.selectFrom('goals')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .orderBy('target_date', 'asc')
+      .execute();
     res.json(goals);
   } catch (error) {
     console.error('Failed to fetch goals:', error);
@@ -15,8 +21,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Add a new goal
-router.post('/', async (req, res) => {
+// Add a new goal for the logged-in user
+router.post('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   const { name, target_amount, current_amount, target_date } = req.body;
 
   if (!name || target_amount === undefined) {
@@ -28,6 +35,7 @@ router.post('/', async (req, res) => {
     const newGoal = await db
       .insertInto('goals')
       .values({
+        user_id: userId,
         name,
         target_amount: parseFloat(target_amount),
         current_amount: current_amount ? parseFloat(current_amount) : 0,
@@ -42,8 +50,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a goal
-router.put('/:id', async (req, res) => {
+// Update a goal for the logged-in user
+router.put('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
     const { name, target_amount, current_amount, target_date } = req.body;
 
@@ -62,6 +71,7 @@ router.put('/:id', async (req, res) => {
                 target_date: target_date || null,
             })
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .returningAll()
             .executeTakeFirst();
 
@@ -76,14 +86,16 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete a goal
-router.delete('/:id', async (req, res) => {
+// Delete a goal for the logged-in user
+router.delete('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
 
     try {
         const result = await db
             .deleteFrom('goals')
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .executeTakeFirst();
 
         if (result.numDeletedRows === 0n) {

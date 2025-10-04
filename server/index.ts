@@ -2,6 +2,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { setupStaticServing } from './static-serve.js';
+import authRouter from './routes/auth';
 import transactionsRouter from './routes/transactions';
 import creditCardsRouter from './routes/creditCards';
 import budgetsRouter from './routes/budgets';
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // API routes
+app.use('/api/auth', authRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/credit-cards', creditCardsRouter);
 app.use('/api/budgets', budgetsRouter);

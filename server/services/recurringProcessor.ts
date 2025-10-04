@@ -54,16 +54,18 @@ export const processRecurringTransactions = async () => {
             await db
                 .insertInto('transactions')
                 .values({
+                    user_id: recurring.user_id,
                     type: recurring.type,
                     amount: recurring.amount,
                     description: recurring.description,
                     category: recurring.category,
                     date: recurring.start_date, // The date of the transaction is the due start_date
                     credit_card_id: recurring.credit_card_id,
+                    goal_id: null, // Recurring transactions don't automatically allocate to goals
                 })
                 .execute();
             
-            console.log(`Processed recurring transaction ID ${recurring.id}: "${recurring.description}"`);
+            console.log(`Processed recurring transaction ID ${recurring.id} for user ${recurring.user_id}: "${recurring.description}"`);
 
             // Calculate the next occurrence date
             const nextDate = getNextDate(startDate, recurring.frequency);

@@ -1,11 +1,13 @@
 
 import express from 'express';
 import { db } from '../db/database';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get all recurring transactions
-router.get('/', async (req, res) => {
+// Get all recurring transactions for the logged-in user
+router.get('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   try {
     const recurringTransactions = await db
       .selectFrom('recurring_transactions')
@@ -22,6 +24,7 @@ router.get('/', async (req, res) => {
         'recurring_transactions.credit_card_id',
         'credit_cards.name as credit_card_name'
       ])
+      .where('recurring_transactions.user_id', '=', userId)
       .orderBy('start_date', 'desc')
       .execute();
     res.json(recurringTransactions);
@@ -31,8 +34,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Add a new recurring transaction
-router.post('/', async (req, res) => {
+// Add a new recurring transaction for the logged-in user
+router.post('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   const { type, amount, description, category, frequency, start_date, end_date, credit_card_id } = req.body;
 
   if (!type || !amount || !description || !category || !frequency || !start_date) {
@@ -44,6 +48,7 @@ router.post('/', async (req, res) => {
     const newRecurringTransaction = await db
       .insertInto('recurring_transactions')
       .values({
+        user_id: userId,
         type,
         amount: parseFloat(amount),
         description,
@@ -81,8 +86,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a recurring transaction
-router.put('/:id', async (req, res) => {
+// Update a recurring transaction for the logged-in user
+router.put('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
     const { type, amount, description, category, frequency, start_date, end_date, credit_card_id } = req.body;
 
@@ -105,6 +111,7 @@ router.put('/:id', async (req, res) => {
                 credit_card_id: type === 'expense' ? credit_card_id : null,
             })
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .returningAll()
             .executeTakeFirst();
 
@@ -138,14 +145,16 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete a recurring transaction
-router.delete('/:id', async (req, res) => {
+// Delete a recurring transaction for the logged-in user
+router.delete('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
 
     try {
         const result = await db
             .deleteFrom('recurring_transactions')
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .executeTakeFirst();
 
         if (result.numDeletedRows === 0n) {

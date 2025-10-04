@@ -2,11 +2,13 @@
 import express from 'express';
 import { db } from '../db/database';
 import { sql } from 'kysely';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get budgets for a specific month with spent amount
-router.get('/:year/:month', async (req, res) => {
+// Get budgets for a specific month with spent amount for the logged-in user
+router.get('/:year/:month', protect, async (req, res) => {
+  const userId = req.user!.id;
   const { year, month } = req.params;
   const startDate = `${year}-${month.padStart(2, '0')}-01`;
   const endDate = new Date(parseInt(year), parseInt(month), 0).getDate();
@@ -15,12 +17,14 @@ router.get('/:year/:month', async (req, res) => {
   try {
     const budgets = await db.selectFrom('budgets')
       .where('month', '=', `${year}-${month.padStart(2, '0')}`)
+      .where('user_id', '=', userId)
       .selectAll()
       .execute();
 
     const expenses = await db.selectFrom('transactions')
       .select(['category', sql<number>`sum(amount)`.as('spent')])
       .where('type', '=', 'expense')
+      .where('user_id', '=', userId)
       .where('date', '>=', startDate)
       .where('date', '<=', fullEndDate)
       .groupBy('category')
@@ -40,8 +44,9 @@ router.get('/:year/:month', async (req, res) => {
   }
 });
 
-// Add or update a budget
-router.post('/', async (req, res) => {
+// Add or update a budget for the logged-in user
+router.post('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   const { category, amount, month } = req.body;
 
   if (!category || amount === undefined || !month) {
@@ -52,12 +57,13 @@ router.post('/', async (req, res) => {
   try {
     const result = await db.insertInto('budgets')
       .values({
+        user_id: userId,
         category,
         amount: parseFloat(amount),
         month,
       })
       .onConflict((oc) => oc
-        .columns(['category', 'month'])
+        .columns(['user_id', 'category', 'month'])
         .doUpdateSet({ amount: parseFloat(amount) })
       )
       .returningAll()
@@ -70,12 +76,14 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Delete a budget
-router.delete('/:id', async (req, res) => {
+// Delete a budget for the logged-in user
+router.delete('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
     try {
         const result = await db.deleteFrom('budgets')
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .executeTakeFirst();
 
         if (result.numDeletedRows === 0n) {

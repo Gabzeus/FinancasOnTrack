@@ -1,13 +1,19 @@
 
 import express from 'express';
 import { db } from '../db/database';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get all settings
-router.get('/', async (req, res) => {
+// Get all settings for the logged-in user
+router.get('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   try {
-    const settings = await db.selectFrom('settings').selectAll().execute();
+    const settings = await db.selectFrom('settings')
+      .where('user_id', '=', userId)
+      .selectAll()
+      .execute();
+      
     const settingsObj = settings.reduce((acc, setting) => {
       acc[setting.key] = setting.value;
       return acc;
@@ -19,8 +25,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Update settings
-router.put('/', async (req, res) => {
+// Update settings for the logged-in user
+router.put('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   const settingsToUpdate: Record<string, string> = req.body;
 
   if (!settingsToUpdate || Object.keys(settingsToUpdate).length === 0) {
@@ -34,8 +41,8 @@ router.put('/', async (req, res) => {
         const value = String(settingsToUpdate[key]);
         await trx
           .insertInto('settings')
-          .values({ key, value })
-          .onConflict((oc) => oc.column('key').doUpdateSet({ value }))
+          .values({ user_id: userId, key, value })
+          .onConflict((oc) => oc.columns(['user_id', 'key']).doUpdateSet({ value }))
           .execute();
       }
     });

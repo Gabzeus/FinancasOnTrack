@@ -3,11 +3,13 @@ import express from 'express';
 import { db } from '../db/database';
 import { sql } from 'kysely';
 import { checkBudgetAndNotify } from '../services/notificationService';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Get all transactions
-router.get('/', async (req, res) => {
+// Get all transactions for the logged-in user
+router.get('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   try {
     const transactions = await db
       .selectFrom('transactions')
@@ -22,6 +24,7 @@ router.get('/', async (req, res) => {
         'transactions.credit_card_id',
         'credit_cards.name as credit_card_name'
       ])
+      .where('transactions.user_id', '=', userId)
       .orderBy('date', 'desc')
       .orderBy('transactions.id', 'desc')
       .execute();
@@ -32,8 +35,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Add a new transaction
-router.post('/', async (req, res) => {
+// Add a new transaction for the logged-in user
+router.post('/', protect, async (req, res) => {
+  const userId = req.user!.id;
   const { type, amount, description, category, date, credit_card_id, goal_id } = req.body;
 
   if (!type || !amount || !description || !category || !date) {
@@ -46,12 +50,14 @@ router.post('/', async (req, res) => {
       const newTransaction = await trx
         .insertInto('transactions')
         .values({
+          user_id: userId,
           type,
           amount: parseFloat(amount),
           description,
           category,
           date,
           credit_card_id: type === 'expense' ? credit_card_id : null,
+          goal_id: type === 'income' ? goal_id : null,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -63,6 +69,7 @@ router.post('/', async (req, res) => {
             current_amount: sql`current_amount + ${parseFloat(amount)}`
           })
           .where('id', '=', parseInt(goal_id, 10))
+          .where('user_id', '=', userId)
           .execute();
       }
 
@@ -85,7 +92,7 @@ router.post('/', async (req, res) => {
     });
 
     if (type === 'expense') {
-        checkBudgetAndNotify(category, date).catch(console.error);
+        checkBudgetAndNotify(userId, category, date).catch(console.error);
     }
 
     res.status(201).json(result);
@@ -95,8 +102,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update a transaction
-router.put('/:id', async (req, res) => {
+// Update a transaction for the logged-in user
+router.put('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
     const { type, amount, description, category, date, credit_card_id } = req.body;
 
@@ -106,8 +114,6 @@ router.put('/:id', async (req, res) => {
     }
 
     try {
-        // Note: Updating goal amounts on transaction edit is complex and not implemented.
-        // This would require tracking the original transaction amount and goal allocation.
         const updatedTransaction = await db
             .updateTable('transactions')
             .set({
@@ -119,6 +125,7 @@ router.put('/:id', async (req, res) => {
                 credit_card_id: type === 'expense' ? credit_card_id : null,
             })
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .returningAll()
             .executeTakeFirst();
 
@@ -127,7 +134,6 @@ router.put('/:id', async (req, res) => {
             return;
         }
         
-        // Fetch the full transaction with card name to return to client
         const result = await db
           .selectFrom('transactions')
           .leftJoin('credit_cards', 'credit_cards.id', 'transactions.credit_card_id')
@@ -145,7 +151,7 @@ router.put('/:id', async (req, res) => {
           .executeTakeFirstOrThrow();
         
         if (type === 'expense') {
-            checkBudgetAndNotify(category, date).catch(console.error);
+            checkBudgetAndNotify(userId, category, date).catch(console.error);
         }
 
         res.json(result);
@@ -155,14 +161,15 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete a transaction
-router.delete('/:id', async (req, res) => {
+// Delete a transaction for the logged-in user
+router.delete('/:id', protect, async (req, res) => {
+    const userId = req.user!.id;
     const { id } = req.params;
-    // Note: Deleting a transaction does not currently revert any amount added to a goal.
     try {
         const deletedTransaction = await db
             .deleteFrom('transactions')
             .where('id', '=', parseInt(id, 10))
+            .where('user_id', '=', userId)
             .returningAll()
             .executeTakeFirst();
 
@@ -172,7 +179,7 @@ router.delete('/:id', async (req, res) => {
         }
         
         if (deletedTransaction.type === 'expense') {
-            checkBudgetAndNotify(deletedTransaction.category, deletedTransaction.date).catch(console.error);
+            checkBudgetAndNotify(userId, deletedTransaction.category, deletedTransaction.date).catch(console.error);
         }
         
         res.status(204).send();
@@ -181,6 +188,5 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({ message: 'Failed to delete transaction' });
     }
 });
-
 
 export default router;

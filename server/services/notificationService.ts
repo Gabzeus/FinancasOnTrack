@@ -2,8 +2,11 @@
 import { db } from '../db/database';
 import { sql } from 'kysely';
 
-async function getSettings() {
-    const settings = await db.selectFrom('settings').selectAll().execute();
+async function getSettings(userId: number) {
+    const settings = await db.selectFrom('settings')
+        .where('user_id', '=', userId)
+        .selectAll()
+        .execute();
     return settings.reduce((acc, setting) => {
         acc[setting.key] = setting.value;
         return acc;
@@ -18,10 +21,10 @@ function sendNotification(subject: string, body: string) {
     console.log('--------------------');
 }
 
-export async function checkBudgetAndNotify(category: string, transactionDate: string) {
-    const settings = await getSettings();
+export async function checkBudgetAndNotify(userId: number, category: string, transactionDate: string) {
+    const settings = await getSettings(userId);
     if (settings['budget_alerts_enabled'] !== 'true') {
-        console.log('Budget alerts are disabled. Skipping check.');
+        console.log(`Budget alerts are disabled for user ${userId}. Skipping check.`);
         return;
     }
 
@@ -31,6 +34,7 @@ export async function checkBudgetAndNotify(category: string, transactionDate: st
     const monthStr = `${year}-${month}`;
 
     const budget = await db.selectFrom('budgets')
+        .where('user_id', '=', userId)
         .where('category', '=', category)
         .where('month', '=', monthStr)
         .select('amount')
@@ -47,6 +51,7 @@ export async function checkBudgetAndNotify(category: string, transactionDate: st
     const result = await db.selectFrom('transactions')
         .select(sql<number>`sum(amount)`.as('spent'))
         .where('type', '=', 'expense')
+        .where('user_id', '=', userId)
         .where('category', '=', category)
         .where('date', '>=', startDate)
         .where('date', '<=', fullEndDate)
