@@ -21,29 +21,39 @@ import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BalanceCard } from '@/components/BalanceCard';
+import { BudgetAlerts } from '@/components/BudgetAlerts';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
   const [goals, setGoals] = React.useState([]);
+  const [budgets, setBudgets] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
 
   const fetchData = async () => {
     try {
-      const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      const [transactionsRes, cardsRes, goalsRes, budgetsRes] = await Promise.all([
         fetch('/api/transactions'),
         fetch('/api/credit-cards'),
         fetch('/api/goals'),
+        fetch(`/api/budgets/${year}/${month}`),
       ]);
-      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok) {
+      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !budgetsRes.ok) {
         throw new Error('Failed to fetch data');
       }
       const transactionsData = await transactionsRes.json();
       const cardsData = await cardsRes.json();
       const goalsData = await goalsRes.json();
+      const budgetsData = await budgetsRes.json();
+
       setTransactions(transactionsData);
       setCreditCards(cardsData);
       setGoals(goalsData);
+      setBudgets(budgetsData);
     } catch (error) {
       console.error(error);
     }
@@ -54,7 +64,7 @@ export default function Dashboard() {
   }, []);
 
   const handleFormSubmit = (savedTransaction) => {
-    // Refetch all data to ensure consistency, especially for goals
+    // Refetch all data to ensure consistency, especially for goals and budgets
     fetchData();
   };
 
@@ -71,7 +81,7 @@ export default function Dashboard() {
     });
   };
 
-  const { totalIncome, totalExpenses, cardExpenses, cashExpenses } = React.useMemo(() => {
+  const { totalIncome, totalExpenses, cardExpenses } = React.useMemo(() => {
     const income = transactions
       .filter((t) => t.type === 'income')
       .reduce((acc, t) => acc + t.amount, 0);
@@ -85,15 +95,10 @@ export default function Dashboard() {
       .filter(t => t.credit_card_id !== null)
       .reduce((acc, t) => acc + t.amount, 0);
 
-    const cashExpenses = expenses
-      .filter(t => t.credit_card_id === null)
-      .reduce((acc, t) => acc + t.amount, 0);
-
     return {
       totalIncome: income,
       totalExpenses: totalExpenses,
       cardExpenses,
-      cashExpenses,
     };
   }, [transactions]);
 
@@ -154,7 +159,7 @@ export default function Dashboard() {
           </Card>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <div className="lg:col-span-4 grid gap-4">
+            <div className="lg:col-span-4 grid gap-4 auto-rows-min">
                 <MonthlySummaryChart transactions={transactions} />
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
@@ -207,7 +212,8 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 grid gap-4 auto-rows-min">
+                <BudgetAlerts budgets={budgets} transactions={transactions} />
                 <ExpenseChart transactions={transactions} />
             </div>
         </div>
