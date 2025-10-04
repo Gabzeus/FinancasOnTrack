@@ -1,8 +1,16 @@
 
 import { Generated } from 'kysely';
 
+export interface UsersTable {
+  id: Generated<number>;
+  email: string;
+  password_hash: string;
+  created_at: Generated<string>;
+}
+
 export interface TransactionsTable {
   id: Generated<number>;
+  user_id: number;
   type: 'income' | 'expense';
   amount: number;
   description: string;
@@ -14,6 +22,7 @@ export interface TransactionsTable {
 
 export interface CreditCardsTable {
   id: Generated<number>;
+  user_id: number;
   name: string;
   limit_amount: number;
   closing_day: number;
@@ -22,6 +31,7 @@ export interface CreditCardsTable {
 
 export interface BudgetsTable {
   id: Generated<number>;
+  user_id: number;
   category: string;
   amount: number;
   month: string; // YYYY-MM format
@@ -29,6 +39,7 @@ export interface BudgetsTable {
 
 export interface GoalsTable {
   id: Generated<number>;
+  user_id: number;
   name: string;
   target_amount: number;
   current_amount: number;
@@ -37,6 +48,7 @@ export interface GoalsTable {
 
 export interface RecurringTransactionsTable {
     id: Generated<number>;
+    user_id: number;
     description: string;
     amount: number;
     type: 'income' | 'expense';
@@ -48,11 +60,13 @@ export interface RecurringTransactionsTable {
 }
 
 export interface SettingsTable {
+  user_id: number;
   key: string;
   value: string;
 }
 
 export interface Database {
+  users: UsersTable;
   transactions: TransactionsTable;
   credit_cards: CreditCardsTable;
   budgets: BudgetsTable;
