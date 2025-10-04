@@ -2,6 +2,7 @@
 import express from 'express';
 import { db } from '../db/database';
 import { sql } from 'kysely';
+import { checkBudgetAndNotify } from '../services/notificationService';
 
 const router = express.Router();
 
@@ -83,6 +84,10 @@ router.post('/', async (req, res) => {
         .executeTakeFirstOrThrow();
     });
 
+    if (type === 'expense') {
+        checkBudgetAndNotify(category, date).catch(console.error);
+    }
+
     res.status(201).json(result);
   } catch (error) {
     console.error('Failed to add transaction:', error);
@@ -138,6 +143,10 @@ router.put('/:id', async (req, res) => {
           ])
           .where('transactions.id', '=', updatedTransaction.id)
           .executeTakeFirstOrThrow();
+        
+        if (type === 'expense') {
+            checkBudgetAndNotify(category, date).catch(console.error);
+        }
 
         res.json(result);
     } catch (error) {
@@ -151,14 +160,19 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     // Note: Deleting a transaction does not currently revert any amount added to a goal.
     try {
-        const result = await db
+        const deletedTransaction = await db
             .deleteFrom('transactions')
             .where('id', '=', parseInt(id, 10))
+            .returningAll()
             .executeTakeFirst();
 
-        if (result.numDeletedRows === 0n) {
+        if (!deletedTransaction) {
             res.status(404).json({ message: 'Transaction not found' });
             return;
+        }
+        
+        if (deletedTransaction.type === 'expense') {
+            checkBudgetAndNotify(deletedTransaction.category, deletedTransaction.date).catch(console.error);
         }
         
         res.status(204).send();

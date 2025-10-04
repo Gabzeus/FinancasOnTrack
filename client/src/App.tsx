@@ -16,6 +16,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Button } from './components/ui/button';
+import { Toaster } from './components/ui/toaster';
 
 function SidebarNav() {
   return (
@@ -192,6 +193,7 @@ function App() {
             </Routes>
           </main>
         </div>
+        <Toaster />
       </div>
     </Router>
   );

@@ -47,10 +47,16 @@ export interface RecurringTransactionsTable {
     credit_card_id: number | null;
 }
 
+export interface SettingsTable {
+  key: string;
+  value: string;
+}
+
 export interface Database {
   transactions: TransactionsTable;
   credit_cards: CreditCardsTable;
   budgets: BudgetsTable;
   goals: GoalsTable;
   recurring_transactions: RecurringTransactionsTable;
+  settings: SettingsTable;
 }
