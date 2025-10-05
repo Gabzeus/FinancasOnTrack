@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BalanceCard } from '@/components/BalanceCard';
 import { BudgetAlerts } from '@/components/BudgetAlerts';
+import api from '@/lib/api';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -36,26 +37,19 @@ export default function Dashboard() {
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
-      const [transactionsRes, cardsRes, goalsRes, budgetsRes] = await Promise.all([
-        fetch('/api/transactions'),
-        fetch('/api/credit-cards'),
-        fetch('/api/goals'),
-        fetch(`/api/budgets/${year}/${month}`),
+      const [transactionsData, cardsData, goalsData, budgetsData] = await Promise.all([
+        api.get('/api/transactions'),
+        api.get('/api/credit-cards'),
+        api.get('/api/goals'),
+        api.get(`/api/budgets/${year}/${month}`),
       ]);
-      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !budgetsRes.ok) {
-        throw new Error('Failed to fetch data');
-      }
-      const transactionsData = await transactionsRes.json();
-      const cardsData = await cardsRes.json();
-      const goalsData = await goalsRes.json();
-      const budgetsData = await budgetsRes.json();
 
       setTransactions(transactionsData);
       setCreditCards(cardsData);
       setGoals(goalsData);
       setBudgets(budgetsData);
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch data", error);
     }
   };
 

@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import api from '@/lib/api';
 
 export function AddCreditCardForm({
   open,
@@ -50,28 +51,16 @@ export function AddCreditCardForm({
     const url = isEditMode
       ? `/api/credit-cards/${cardToEdit.id}`
       : '/api/credit-cards';
-    const method = isEditMode ? 'PUT' : 'POST';
+    const method = isEditMode ? api.put : api.post;
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          limit_amount: parseFloat(limit),
-          closing_day: parseInt(closingDay, 10),
-          due_day: parseInt(dueDay, 10),
-        }),
+      const savedCard = await method(url, {
+        name,
+        limit_amount: parseFloat(limit),
+        closing_day: parseInt(closingDay, 10),
+        due_day: parseInt(dueDay, 10),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha ao salvar cartão de crédito');
-      }
-
-      const savedCard = await response.json();
       onFormSubmit(savedCard);
       setOpen(false);
     } catch (error) {

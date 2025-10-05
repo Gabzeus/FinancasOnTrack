@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -18,9 +19,7 @@ export default function SettingsPage() {
   React.useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('/api/settings');
-        if (!response.ok) throw new Error('Failed to fetch settings');
-        const data = await response.json();
+        const data = await api.get('/api/settings');
         setSettings({
           email_notifications_enabled: data.email_notifications_enabled === 'true',
           budget_alerts_enabled: data.budget_alerts_enabled === 'true',
@@ -45,12 +44,7 @@ export default function SettingsPage() {
 
   const handleSaveChanges = async () => {
     try {
-      const response = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
-      if (!response.ok) throw new Error('Failed to save settings');
+      await api.put('/api/settings', settings);
       toast({
         title: 'Sucesso!',
         description: 'Configurações salvas com sucesso!',

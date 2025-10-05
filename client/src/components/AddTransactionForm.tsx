@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import api from '@/lib/api';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -88,7 +89,7 @@ export function AddTransactionForm({
     const url = isEditMode
       ? `/api/transactions/${transactionToEdit.id}`
       : '/api/transactions';
-    const method = isEditMode ? 'PUT' : 'POST';
+    const method = isEditMode ? api.put : api.post;
 
     const body = {
       type,
@@ -101,19 +102,7 @@ export function AddTransactionForm({
     };
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao salvar transação');
-      }
-
-      const savedTransaction = await response.json();
+      const savedTransaction = await method(url, body);
       onFormSubmit(savedTransaction);
       setOpen(false);
     } catch (error) {

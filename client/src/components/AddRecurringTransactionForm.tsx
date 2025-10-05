@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import api from '@/lib/api';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -89,7 +90,7 @@ export function AddRecurringTransactionForm({
     const url = isEditMode
       ? `/api/recurring-transactions/${itemToEdit.id}`
       : '/api/recurring-transactions';
-    const method = isEditMode ? 'PUT' : 'POST';
+    const method = isEditMode ? api.put : api.post;
 
     const body = {
       type,
@@ -103,19 +104,7 @@ export function AddRecurringTransactionForm({
     };
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error('Falha ao salvar transação recorrente');
-      }
-
-      const savedItem = await response.json();
+      const savedItem = await method(url, body);
       onFormSubmit(savedItem);
       setOpen(false);
     } catch (error) {

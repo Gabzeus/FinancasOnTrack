@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import api from '@/lib/api';
 
 export function AddBudgetForm({
   open,
@@ -51,28 +52,12 @@ export function AddBudgetForm({
       return;
     }
 
-    const url = '/api/budgets';
-    const method = 'POST';
-
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          category,
-          amount: parseFloat(amount),
-          month: monthString,
-        }),
+      const savedBudget = await api.post('/api/budgets', {
+        category,
+        amount: parseFloat(amount),
+        month: monthString,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha ao salvar orçamento');
-      }
-
-      const savedBudget = await response.json();
       onFormSubmit(savedBudget);
       setOpen(false);
     } catch (error) {

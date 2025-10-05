@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import api from '@/lib/api';
 
 export function AddGoalForm({
   open,
@@ -49,28 +50,16 @@ export function AddGoalForm({
     const url = isEditMode
       ? `/api/goals/${goalToEdit.id}`
       : '/api/goals';
-    const method = isEditMode ? 'PUT' : 'POST';
+    const method = isEditMode ? api.put : api.post;
 
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          target_amount: parseFloat(targetAmount),
-          current_amount: parseFloat(currentAmount || '0'),
-          target_date: targetDate || null,
-        }),
+      const savedGoal = await method(url, {
+        name,
+        target_amount: parseFloat(targetAmount),
+        current_amount: parseFloat(currentAmount || '0'),
+        target_date: targetDate || null,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha ao salvar meta');
-      }
-
-      const savedGoal = await response.json();
       onFormSubmit(savedGoal);
       setOpen(false);
     } catch (error) {

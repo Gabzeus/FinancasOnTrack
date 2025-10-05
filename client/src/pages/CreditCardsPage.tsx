@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AddCreditCardForm } from '@/components/AddCreditCardForm';
+import api from '@/lib/api';
 
 export default function CreditCardsPage() {
   const [cards, setCards] = React.useState([]);
@@ -38,11 +39,7 @@ export default function CreditCardsPage() {
 
   const fetchCards = async () => {
     try {
-      const response = await fetch('/api/credit-cards');
-      if (!response.ok) {
-        throw new Error('Failed to fetch credit cards');
-      }
-      const data = await response.json();
+      const data = await api.get('/api/credit-cards');
       setCards(data);
     } catch (error) {
       console.error(error);
@@ -79,12 +76,7 @@ export default function CreditCardsPage() {
   const confirmDelete = async () => {
     if (!cardToDelete) return;
     try {
-      const response = await fetch(`/api/credit-cards/${cardToDelete.id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete credit card');
-      }
+      await api.delete(`/api/credit-cards/${cardToDelete.id}`);
       setCards(prev => prev.filter(c => c.id !== cardToDelete.id));
     } catch (error) {
       console.error(error);
