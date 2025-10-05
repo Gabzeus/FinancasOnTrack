@@ -18,7 +18,9 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
 import { apiFetch } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -47,6 +49,10 @@ export function AddTransactionForm({
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [creditCardId, setCreditCardId] = React.useState('');
   const [goalId, setGoalId] = React.useState('');
+  const [isRecurring, setIsRecurring] = React.useState(false);
+  const [frequency, setFrequency] = React.useState('monthly');
+  const [endDate, setEndDate] = React.useState('');
+  const { toast } = useToast();
 
   const isEditMode = !!transactionToEdit;
 
@@ -59,6 +65,7 @@ export function AddTransactionForm({
       setDate(transactionToEdit.date.split('T')[0]);
       setCreditCardId(transactionToEdit.credit_card_id?.toString() || '');
       setGoalId(''); // Editing goal allocation is not supported
+      setIsRecurring(false); // Editing recurring from here is not supported
     } else {
       // Reset form for adding
       setType('expense');
@@ -68,6 +75,9 @@ export function AddTransactionForm({
       setDate(new Date().toISOString().split('T')[0]);
       setCreditCardId('');
       setGoalId('');
+      setIsRecurring(false);
+      setFrequency('monthly');
+      setEndDate('');
     }
   }, [transactionToEdit, isEditMode, open]);
 
@@ -82,16 +92,19 @@ export function AddTransactionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!type || !amount || !description || !category || !date) {
-      alert('Por favor, preencha todos os campos.');
+      toast({
+        title: 'Erro',
+        description: 'Por favor, preencha todos os campos obrigatórios.',
+        variant: 'destructive',
+      });
       return;
     }
 
-    const url = isEditMode
+    let url = isEditMode
       ? `/api/transactions/${transactionToEdit.id}`
       : '/api/transactions';
-    const method = isEditMode ? 'PUT' : 'POST';
-
-    const body = {
+    let method = isEditMode ? 'PUT' : 'POST';
+    let body: any = {
       type,
       amount: parseFloat(amount),
       description,
@@ -101,6 +114,21 @@ export function AddTransactionForm({
       goal_id: (goalId && goalId !== 'none') ? parseInt(goalId, 10) : null,
     };
 
+    if (isRecurring && !isEditMode) {
+      url = '/api/recurring-transactions';
+      method = 'POST';
+      body = {
+        type,
+        amount: parseFloat(amount),
+        description,
+        category,
+        frequency,
+        start_date: date,
+        end_date: endDate || null,
+        credit_card_id: (creditCardId && creditCardId !== 'none') ? parseInt(creditCardId, 10) : null,
+      };
+    }
+
     try {
       const response = await apiFetch(url, {
         method,
@@ -108,15 +136,24 @@ export function AddTransactionForm({
       });
 
       if (!response.ok) {
-        throw new Error('Falha ao salvar transação');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Falha ao salvar transação');
       }
 
       const savedTransaction = await response.json();
       onFormSubmit(savedTransaction);
       setOpen(false);
+      toast({
+        title: 'Sucesso!',
+        description: `Transação ${isRecurring ? 'recorrente ' : ''}salva com sucesso.`,
+      });
     } catch (error) {
       console.error(error);
-      alert('Ocorreu um erro ao salvar a transação.');
+      toast({
+        title: 'Erro',
+        description: `Ocorreu um erro ao salvar a transação: ${error.message}`,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -129,6 +166,16 @@ export function AddTransactionForm({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+          {!isEditMode && (
+            <div className="flex items-center space-x-2 justify-end">
+              <Label htmlFor="recurring-switch">Recorrente</Label>
+              <Switch
+                id="recurring-switch"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+          )}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="type" className="text-right">
               Tipo
@@ -227,7 +274,7 @@ export function AddTransactionForm({
           )}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="date" className="text-right">
-              Data
+              Data {isRecurring ? 'de Início' : ''}
             </Label>
             <Input
               id="date"
@@ -237,6 +284,26 @@ export function AddTransactionForm({
               className="col-span-3"
             />
           </div>
+          {isRecurring && !isEditMode && (
+            <>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="frequency" className="text-right">Frequência</Label>
+                <Select value={frequency} onValueChange={setFrequency}>
+                  <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Diária</SelectItem>
+                    <SelectItem value="weekly">Semanal</SelectItem>
+                    <SelectItem value="monthly">Mensal</SelectItem>
+                    <SelectItem value="yearly">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="endDate" className="text-right">Data Final</Label>
+                <Input id="endDate" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="col-span-3" />
+              </div>
+            </>
+          )}
           <DialogFooter>
             <DialogClose asChild>
               <Button type="button" variant="secondary">
