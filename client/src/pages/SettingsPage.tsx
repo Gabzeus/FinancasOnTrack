@@ -6,9 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { apiFetch } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [settings, setSettings] = React.useState({
     email_notifications_enabled: true,
     budget_alerts_enabled: true,
@@ -18,7 +21,7 @@ export default function SettingsPage() {
   React.useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const response = await fetch('/api/settings');
+        const response = await apiFetch('/api/settings');
         if (!response.ok) throw new Error('Failed to fetch settings');
         const data = await response.json();
         setSettings({
@@ -45,9 +48,8 @@ export default function SettingsPage() {
 
   const handleSaveChanges = async () => {
     try {
-      const response = await fetch('/api/settings', {
+      const response = await apiFetch('/api/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
       if (!response.ok) throw new Error('Failed to save settings');
@@ -90,11 +92,11 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome</Label>
-              <Input id="name" placeholder="Seu nome" />
+              <Input id="name" placeholder="Seu nome" disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="seu@email.com" />
+              <Input id="email" type="email" placeholder="seu@email.com" value={user?.email || ''} disabled />
             </div>
           </CardContent>
         </Card>
@@ -159,7 +161,7 @@ export default function SettingsPage() {
               </div>
               <Switch id="two-factor" disabled />
             </div>
-            <Button variant="outline">Alterar Senha</Button>
+            <Button variant="outline" disabled>Alterar Senha</Button>
           </CardContent>
         </Card>
       </div>

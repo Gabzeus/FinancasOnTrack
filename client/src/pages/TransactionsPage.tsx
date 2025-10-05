@@ -36,6 +36,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AddTransactionForm } from '@/components/AddTransactionForm';
+import { apiFetch } from '@/lib/api';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -69,9 +70,9 @@ export default function TransactionsPage() {
   const fetchData = async () => {
     try {
       const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
-        fetch('/api/transactions'),
-        fetch('/api/credit-cards'),
-        fetch('/api/goals'),
+        apiFetch('/api/transactions'),
+        apiFetch('/api/credit-cards'),
+        apiFetch('/api/goals'),
       ]);
       if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok) {
         throw new Error('Failed to fetch data');
@@ -127,7 +128,7 @@ export default function TransactionsPage() {
   const confirmDelete = async () => {
     if (!transactionToDelete) return;
     try {
-      const response = await fetch(`/api/transactions/${transactionToDelete.id}`, {
+      const response = await apiFetch(`/api/transactions/${transactionToDelete.id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

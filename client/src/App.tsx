@@ -1,7 +1,7 @@
 
 import * as React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom';
-import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target, PiggyBank, Repeat, Settings } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate } from 'react-router-dom';
+import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target, PiggyBank, Repeat, Settings, LogOut } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
 import CreditCardsPage from './pages/CreditCardsPage';
@@ -9,6 +9,9 @@ import BudgetsPage from './pages/BudgetsPage';
 import GoalsPage from './pages/GoalsPage';
 import RecurringTransactionsPage from './pages/RecurringTransactionsPage';
 import SettingsPage from './pages/SettingsPage';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import { useAuth } from './contexts/AuthContext';
 import { cn } from './lib/utils';
 import {
   Sheet,
@@ -99,6 +102,7 @@ function SidebarNav() {
 }
 
 function Sidebar() {
+  const { logout } = useAuth();
   return (
     <div className="hidden border-r bg-muted/40 md:block">
       <div className="flex h-full max-h-screen flex-col gap-2">
@@ -111,7 +115,7 @@ function Sidebar() {
         <div className="flex-1">
           <SidebarNav />
         </div>
-        <div className="mt-auto p-4">
+        <div className="mt-auto p-4 space-y-2">
            <NavLink
             to="/settings"
             className={({ isActive }) =>
@@ -124,6 +128,10 @@ function Sidebar() {
             <Settings className="h-4 w-4" />
             Configurações
           </NavLink>
+          <Button variant="ghost" className="w-full justify-start px-3 py-2" onClick={logout}>
+            <LogOut className="h-4 w-4 mr-3" />
+            Sair
+          </Button>
         </div>
       </div>
     </div>
@@ -131,6 +139,7 @@ function Sidebar() {
 }
 
 function MobileNav() {
+  const { logout } = useAuth();
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 md:hidden">
       <Sheet>
@@ -151,7 +160,7 @@ function MobileNav() {
             </Link>
             <SidebarNav />
           </nav>
-           <div className="mt-auto p-4">
+           <div className="mt-auto p-4 space-y-2">
            <NavLink
             to="/settings"
             className={({ isActive }) =>
@@ -164,6 +173,10 @@ function MobileNav() {
             <Settings className="h-4 w-4" />
             Configurações
           </NavLink>
+          <Button variant="ghost" className="w-full justify-start px-3 py-2" onClick={logout}>
+            <LogOut className="h-4 w-4 mr-3" />
+            Sair
+          </Button>
         </div>
         </SheetContent>
       </Sheet>
@@ -174,27 +187,45 @@ function MobileNav() {
   );
 }
 
+function MainLayout() {
+  return (
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <Sidebar />
+      <div className="flex flex-col">
+        <MobileNav />
+        <main className="flex flex-1 flex-col gap-4 lg:gap-6 bg-background">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/recurring" element={<RecurringTransactionsPage />} />
+            <Route path="/credit-cards" element={<CreditCardsPage />} />
+            <Route path="/budgets" element={<BudgetsPage />} />
+            <Route path="/goals" element={<GoalsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
+
 function App() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a global spinner
+  }
+
   return (
     <Router>
-      <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-        <Sidebar />
-        <div className="flex flex-col">
-          <MobileNav />
-          <main className="flex flex-1 flex-col gap-4 lg:gap-6 bg-background">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/transactions" element={<TransactionsPage />} />
-              <Route path="/recurring" element={<RecurringTransactionsPage />} />
-              <Route path="/credit-cards" element={<CreditCardsPage />} />
-              <Route path="/budgets" element={<BudgetsPage />} />
-              <Route path="/goals" element={<GoalsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
-            </Routes>
-          </main>
-        </div>
-        <Toaster />
-      </div>
+      <Routes>
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/*" element={<MainLayout />} />
+        </Route>
+      </Routes>
+      <Toaster />
     </Router>
   );
 }

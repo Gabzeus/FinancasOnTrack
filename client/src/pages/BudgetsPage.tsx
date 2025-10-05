@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 
 const expenseCategories = [
   'Alimentação',
@@ -45,7 +46,7 @@ export default function BudgetsPage() {
     const year = currentMonth.getFullYear();
     const month = (currentMonth.getMonth() + 1).toString();
     try {
-      const response = await fetch(`/api/budgets/${year}/${month}`);
+      const response = await apiFetch(`/api/budgets/${year}/${month}`);
       if (!response.ok) {
         throw new Error('Failed to fetch budgets');
       }
@@ -83,7 +84,7 @@ export default function BudgetsPage() {
   const confirmDelete = async () => {
     if (!budgetToDelete) return;
     try {
-      const response = await fetch(`/api/budgets/${budgetToDelete.id}`, {
+      const response = await apiFetch(`/api/budgets/${budgetToDelete.id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

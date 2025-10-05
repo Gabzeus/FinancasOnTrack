@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 
 export default function GoalsPage() {
   const [goals, setGoals] = React.useState([]);
@@ -32,7 +33,7 @@ export default function GoalsPage() {
 
   const fetchGoals = async () => {
     try {
-      const response = await fetch('/api/goals');
+      const response = await apiFetch('/api/goals');
       if (!response.ok) {
         throw new Error('Failed to fetch goals');
       }
@@ -73,7 +74,7 @@ export default function GoalsPage() {
   const confirmDelete = async () => {
     if (!goalToDelete) return;
     try {
-      const response = await fetch(`/api/goals/${goalToDelete.id}`, {
+      const response = await apiFetch(`/api/goals/${goalToDelete.id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AddRecurringTransactionForm } from '@/components/AddRecurringTransactionForm';
+import { apiFetch } from '@/lib/api';
 
 const frequencyMap = {
   daily: 'Diária',
@@ -47,8 +48,8 @@ export default function RecurringTransactionsPage() {
   const fetchData = async () => {
     try {
       const [recurringRes, cardsRes] = await Promise.all([
-        fetch('/api/recurring-transactions'),
-        fetch('/api/credit-cards'),
+        apiFetch('/api/recurring-transactions'),
+        apiFetch('/api/credit-cards'),
       ]);
       if (!recurringRes.ok || !cardsRes.ok) {
         throw new Error('Failed to fetch data');
@@ -91,7 +92,7 @@ export default function RecurringTransactionsPage() {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
     try {
-      const response = await fetch(`/api/recurring-transactions/${itemToDelete.id}`, {
+      const response = await apiFetch(`/api/recurring-transactions/${itemToDelete.id}`, {
         method: 'DELETE',
       });
       if (!response.ok) {

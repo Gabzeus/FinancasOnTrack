@@ -22,6 +22,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BalanceCard } from '@/components/BalanceCard';
 import { BudgetAlerts } from '@/components/BudgetAlerts';
+import { apiFetch } from '@/lib/api';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -37,10 +38,10 @@ export default function Dashboard() {
       const month = now.getMonth() + 1;
 
       const [transactionsRes, cardsRes, goalsRes, budgetsRes] = await Promise.all([
-        fetch('/api/transactions'),
-        fetch('/api/credit-cards'),
-        fetch('/api/goals'),
-        fetch(`/api/budgets/${year}/${month}`),
+        apiFetch('/api/transactions'),
+        apiFetch('/api/credit-cards'),
+        apiFetch('/api/goals'),
+        apiFetch(`/api/budgets/${year}/${month}`),
       ]);
       if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !budgetsRes.ok) {
         throw new Error('Failed to fetch data');

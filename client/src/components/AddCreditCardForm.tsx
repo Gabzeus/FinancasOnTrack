@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { apiFetch } from '@/lib/api';
 
 export function AddCreditCardForm({
   open,
@@ -53,11 +54,8 @@ export function AddCreditCardForm({
     const method = isEditMode ? 'PUT' : 'POST';
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           name,
           limit_amount: parseFloat(limit),

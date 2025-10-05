@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { apiFetch } from '@/lib/api';
 
 export function AddGoalForm({
   open,
@@ -52,11 +53,8 @@ export function AddGoalForm({
     const method = isEditMode ? 'PUT' : 'POST';
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           name,
           target_amount: parseFloat(targetAmount),

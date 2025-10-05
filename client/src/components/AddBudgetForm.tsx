@@ -18,6 +18,7 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import { apiFetch } from '@/lib/api';
 
 export function AddBudgetForm({
   open,
@@ -55,11 +56,8 @@ export function AddBudgetForm({
     const method = 'POST';
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           category,
           amount: parseFloat(amount),
