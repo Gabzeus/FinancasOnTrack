@@ -1,7 +1,7 @@
 
 import * as React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target, PiggyBank, Repeat, Settings, LogOut } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, NavLink } from 'react-router-dom';
+import { LayoutDashboard, Wallet, List, Menu, CreditCard, Target, PiggyBank, Repeat, Settings } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
 import CreditCardsPage from './pages/CreditCardsPage';
@@ -9,8 +9,6 @@ import BudgetsPage from './pages/BudgetsPage';
 import GoalsPage from './pages/GoalsPage';
 import RecurringTransactionsPage from './pages/RecurringTransactionsPage';
 import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute';
 import { cn } from './lib/utils';
 import {
   Sheet,
@@ -100,21 +98,6 @@ function SidebarNav() {
   );
 }
 
-function LogoutButton() {
-    const navigate = useNavigate();
-    const handleLogout = () => {
-        localStorage.removeItem('authToken');
-        navigate('/login');
-    };
-
-    return (
-        <Button variant="ghost" onClick={handleLogout} className="w-full justify-start flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700">
-            <LogOut className="h-4 w-4" />
-            Sair
-        </Button>
-    );
-}
-
 function Sidebar() {
   return (
     <div className="hidden border-r bg-muted/40 md:block">
@@ -128,7 +111,7 @@ function Sidebar() {
         <div className="flex-1">
           <SidebarNav />
         </div>
-        <div className="mt-auto p-4 space-y-2">
+        <div className="mt-auto p-4">
            <NavLink
             to="/settings"
             className={({ isActive }) =>
@@ -141,7 +124,6 @@ function Sidebar() {
             <Settings className="h-4 w-4" />
             Configurações
           </NavLink>
-          <LogoutButton />
         </div>
       </div>
     </div>
@@ -169,7 +151,7 @@ function MobileNav() {
             </Link>
             <SidebarNav />
           </nav>
-           <div className="mt-auto p-4 space-y-2">
+           <div className="mt-auto p-4">
            <NavLink
             to="/settings"
             className={({ isActive }) =>
@@ -182,7 +164,6 @@ function MobileNav() {
             <Settings className="h-4 w-4" />
             Configurações
           </NavLink>
-          <LogoutButton />
         </div>
         </SheetContent>
       </Sheet>
@@ -193,38 +174,27 @@ function MobileNav() {
   );
 }
 
-function MainLayout() {
-  return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <Sidebar />
-      <div className="flex flex-col">
-        <MobileNav />
-        <main className="flex flex-1 flex-col gap-4 lg:gap-6 bg-background">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/recurring" element={<RecurringTransactionsPage />} />
-            <Route path="/credit-cards" element={<CreditCardsPage />} />
-            <Route path="/budgets" element={<BudgetsPage />} />
-            <Route path="/goals" element={<GoalsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Routes>
-        </main>
-      </div>
-    </div>
-  );
-}
-
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/*" element={<MainLayout />} />
-        </Route>
-      </Routes>
-      <Toaster />
+      <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+        <Sidebar />
+        <div className="flex flex-col">
+          <MobileNav />
+          <main className="flex flex-1 flex-col gap-4 lg:gap-6 bg-background">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/recurring" element={<RecurringTransactionsPage />} />
+              <Route path="/credit-cards" element={<CreditCardsPage />} />
+              <Route path="/budgets" element={<BudgetsPage />} />
+              <Route path="/goals" element={<GoalsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Routes>
+          </main>
+        </div>
+        <Toaster />
+      </div>
     </Router>
   );
 }

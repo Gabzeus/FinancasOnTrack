@@ -28,7 +28,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AddRecurringTransactionForm } from '@/components/AddRecurringTransactionForm';
-import api from '@/lib/api';
 
 const frequencyMap = {
   daily: 'Diária',
@@ -47,10 +46,15 @@ export default function RecurringTransactionsPage() {
 
   const fetchData = async () => {
     try {
-      const [recurringData, cardsData] = await Promise.all([
-        api.get('/api/recurring-transactions'),
-        api.get('/api/credit-cards'),
+      const [recurringRes, cardsRes] = await Promise.all([
+        fetch('/api/recurring-transactions'),
+        fetch('/api/credit-cards'),
       ]);
+      if (!recurringRes.ok || !cardsRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const recurringData = await recurringRes.json();
+      const cardsData = await cardsRes.json();
       setRecurring(recurringData);
       setCreditCards(cardsData);
     } catch (error) {
@@ -87,7 +91,12 @@ export default function RecurringTransactionsPage() {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
     try {
-      await api.delete(`/api/recurring-transactions/${itemToDelete.id}`);
+      const response = await fetch(`/api/recurring-transactions/${itemToDelete.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete recurring transaction');
+      }
       setRecurring(prev => prev.filter(t => t.id !== itemToDelete.id));
     } catch (error) {
       console.error(error);

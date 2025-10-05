@@ -36,7 +36,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { AddTransactionForm } from '@/components/AddTransactionForm';
-import api from '@/lib/api';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -69,11 +68,17 @@ export default function TransactionsPage() {
 
   const fetchData = async () => {
     try {
-      const [transactionsData, cardsData, goalsData] = await Promise.all([
-        api.get('/api/transactions'),
-        api.get('/api/credit-cards'),
-        api.get('/api/goals'),
+      const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
+        fetch('/api/transactions'),
+        fetch('/api/credit-cards'),
+        fetch('/api/goals'),
       ]);
+      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+      const transactionsData = await transactionsRes.json();
+      const cardsData = await cardsRes.json();
+      const goalsData = await goalsRes.json();
       setTransactions(transactionsData);
       setCreditCards(cardsData);
       setGoals(goalsData);
@@ -122,7 +127,12 @@ export default function TransactionsPage() {
   const confirmDelete = async () => {
     if (!transactionToDelete) return;
     try {
-      await api.delete(`/api/transactions/${transactionToDelete.id}`);
+      const response = await fetch(`/api/transactions/${transactionToDelete.id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete transaction');
+      }
       // Refetch data after delete
       fetchData();
     } catch (error) {
