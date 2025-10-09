@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -164,6 +165,9 @@ export function AddTransactionForm({
           <DialogTitle>
             {isEditMode ? 'Editar Transação' : 'Adicionar Nova Transação'}
           </DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Edite os detalhes da sua transação.' : 'Adicione uma nova receita ou despesa.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           {!isEditMode && (
