@@ -2,22 +2,16 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scale } from 'lucide-react';
+import { FormattedCurrency } from './FormattedCurrency';
 
 interface BalanceCardProps {
   totalIncome: number;
   totalExpenses: number;
 }
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
-
 export function BalanceCard({ totalIncome, totalExpenses }: BalanceCardProps) {
   const balance = totalIncome - totalExpenses;
-  const balanceColor = balance >= 0 ? 'text-green-500' : 'text-red-500';
+  const balanceColor = balance >= 0 ? 'text-green-400' : 'text-red-400';
 
   return (
     <Card>
@@ -27,7 +21,7 @@ export function BalanceCard({ totalIncome, totalExpenses }: BalanceCardProps) {
       </CardHeader>
       <CardContent>
         <div className={`text-2xl font-bold ${balanceColor}`}>
-          {formatCurrency(balance)}
+          <FormattedCurrency value={balance} />
         </div>
       </CardContent>
     </Card>

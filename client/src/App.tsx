@@ -29,8 +29,8 @@ function SidebarNav() {
         end
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-            isActive && 'bg-muted text-blue-700',
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
           )
         }
       >
@@ -41,8 +41,8 @@ function SidebarNav() {
         to="/transactions"
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-            isActive && 'bg-muted text-blue-700',
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
           )
         }
       >
@@ -53,8 +53,8 @@ function SidebarNav() {
         to="/recurring"
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-            isActive && 'bg-muted text-blue-700',
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
           )
         }
       >
@@ -65,8 +65,8 @@ function SidebarNav() {
         to="/credit-cards"
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-            isActive && 'bg-muted text-blue-700',
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
           )
         }
       >
@@ -77,8 +77,8 @@ function SidebarNav() {
         to="/budgets"
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-            isActive && 'bg-muted text-blue-700',
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
           )
         }
       >
@@ -89,8 +89,8 @@ function SidebarNav() {
         to="/goals"
         className={({ isActive }) =>
           cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-            isActive && 'bg-muted text-blue-700',
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
           )
         }
       >
@@ -108,7 +108,7 @@ function Sidebar() {
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <Link to="/" className="flex items-center gap-2 font-semibold">
-            <Wallet className="h-6 w-6 text-blue-700" />
+            <Wallet className="h-6 w-6 text-primary" />
             <span className="">FinTrack</span>
           </Link>
         </div>
@@ -120,15 +120,15 @@ function Sidebar() {
             to="/settings"
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-                isActive && 'bg-muted text-blue-700',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+                isActive && 'bg-muted text-primary',
               )
             }
           >
             <Settings className="h-4 w-4" />
             Configurações
           </NavLink>
-          <Button variant="ghost" className="w-full justify-start px-3 py-2" onClick={logout}>
+          <Button variant="ghost" className="w-full justify-start px-3 py-2 text-muted-foreground hover:text-primary" onClick={logout}>
             <LogOut className="h-4 w-4 mr-3" />
             Sair
           </Button>
@@ -155,7 +155,7 @@ function MobileNav() {
               to="/"
               className="flex items-center gap-2 text-lg font-semibold mb-4"
             >
-              <Wallet className="h-6 w-6 text-blue-700" />
+              <Wallet className="h-6 w-6 text-primary" />
               <span className="">FinTrack</span>
             </Link>
             <SidebarNav />
@@ -165,15 +165,15 @@ function MobileNav() {
             to="/settings"
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-blue-700',
-                isActive && 'bg-muted text-blue-700',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+                isActive && 'bg-muted text-primary',
               )
             }
           >
             <Settings className="h-4 w-4" />
             Configurações
           </NavLink>
-          <Button variant="ghost" className="w-full justify-start px-3 py-2" onClick={logout}>
+          <Button variant="ghost" className="w-full justify-start px-3 py-2 text-muted-foreground hover:text-primary" onClick={logout}>
             <LogOut className="h-4 w-4 mr-3" />
             Sair
           </Button>

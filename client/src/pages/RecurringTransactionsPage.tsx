@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AddRecurringTransactionForm } from '@/components/AddRecurringTransactionForm';
 import { apiFetch } from '@/lib/api';
+import { FormattedCurrency } from '@/components/FormattedCurrency';
 
 const frequencyMap = {
   daily: 'Diária',
@@ -108,13 +109,6 @@ export default function RecurringTransactionsPage() {
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
@@ -125,7 +119,7 @@ export default function RecurringTransactionsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Transações Recorrentes</h2>
         <div className="flex items-center space-x-2">
-           <Button className="bg-blue-700 hover:bg-blue-800" onClick={handleAddClick}>
+           <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
               <PlusCircle className="mr-2" />
               Nova Recorrência
             </Button>
@@ -156,10 +150,10 @@ export default function RecurringTransactionsPage() {
                       <TableCell>{formatDate(item.start_date)}</TableCell>
                       <TableCell
                         className={`font-medium ${
-                          item.type === 'income' ? 'text-green-500' : 'text-red-500'
+                          item.type === 'income' ? 'text-green-400' : 'text-red-400'
                         }`}
                       >
-                        {item.type === 'income' ? '+' : '-'} {formatCurrency(item.amount)}
+                        {item.type === 'income' ? '+' : '-'} <FormattedCurrency value={item.amount} valueClasses="text-sm" symbolClasses="text-xs" />
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>

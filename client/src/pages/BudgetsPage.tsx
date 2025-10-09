@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
+import { FormattedCurrency } from '@/components/FormattedCurrency';
 
 const expenseCategories = [
   'Alimentação',
@@ -100,13 +101,6 @@ export default function BudgetsPage() {
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const changeMonth = (offset) => {
     setCurrentMonth(prev => {
       const newDate = new Date(prev);
@@ -121,7 +115,7 @@ export default function BudgetsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Orçamentos</h2>
         <div className="flex items-center space-x-2">
-          <Button className="bg-blue-700 hover:bg-blue-800" onClick={handleAddClick}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
             <PlusCircle className="mr-2" />
             Novo Orçamento
           </Button>
@@ -164,9 +158,9 @@ export default function BudgetsPage() {
                   </DropdownMenu>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(budget.amount)}</div>
+                  <div className="text-2xl font-bold"><FormattedCurrency value={budget.amount} /></div>
                   <p className="text-xs text-muted-foreground">
-                    Gasto: {formatCurrency(budget.spent)}
+                    Gasto: <FormattedCurrency value={budget.spent} valueClasses="text-xs" symbolClasses="text-xs" />
                   </p>
                   <Progress value={percentage} className="mt-4 h-2" />
                 </CardContent>

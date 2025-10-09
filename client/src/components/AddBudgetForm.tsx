@@ -132,7 +132,7 @@ export function AddBudgetForm({
                 Cancelar
               </Button>
             </DialogClose>
-            <Button type="submit" className="bg-blue-700 hover:bg-blue-800">
+            <Button type="submit" className="bg-primary hover:bg-primary/90">
               Salvar
             </Button>
           </DialogFooter>

@@ -87,7 +87,7 @@ export default function LoginPage() {
       <Tabs defaultValue="login" className="w-[400px]">
         <div className="flex justify-center mb-4">
             <div className="flex items-center gap-2 font-semibold text-2xl">
-                <Wallet className="h-8 w-8 text-blue-700" />
+                <Wallet className="h-8 w-8 text-primary" />
                 <span className="">FinTrack</span>
             </div>
         </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full bg-blue-700 hover:bg-blue-800" type="submit">Entrar</Button>
+                <Button className="w-full bg-primary hover:bg-primary/90" type="submit">Entrar</Button>
               </CardFooter>
             </Card>
           </form>
@@ -144,7 +144,7 @@ export default function LoginPage() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full bg-blue-700 hover:bg-blue-800" type="submit">Registar</Button>
+                <Button className="w-full bg-primary hover:bg-primary/90" type="submit">Registar</Button>
               </CardFooter>
             </Card>
           </form>

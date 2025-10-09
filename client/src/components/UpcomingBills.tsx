@@ -2,17 +2,11 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CalendarClock, BellRing } from 'lucide-react';
+import { FormattedCurrency } from './FormattedCurrency';
 
 interface UpcomingBillsProps {
   recurringTransactions: any[];
 }
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
 
 const formatDate = (date: Date) => {
   return date.toLocaleDateString('pt-BR', {
@@ -62,8 +56,8 @@ export function UpcomingBills({ recurringTransactions }: UpcomingBillsProps) {
             {upcomingBills.slice(0, 5).map(bill => {
               const daysUntilDue = getDaysUntilDue(bill.dueDate);
               let urgencyColor = 'text-muted-foreground';
-              if (daysUntilDue <= 3) urgencyColor = 'text-red-500';
-              else if (daysUntilDue <= 7) urgencyColor = 'text-orange-500';
+              if (daysUntilDue <= 3) urgencyColor = 'text-red-400';
+              else if (daysUntilDue <= 7) urgencyColor = 'text-orange-400';
 
               return (
                 <div key={bill.id} className="flex items-center justify-between">
@@ -72,7 +66,7 @@ export function UpcomingBills({ recurringTransactions }: UpcomingBillsProps) {
                     <p className="text-sm text-muted-foreground">{formatDate(bill.dueDate)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(bill.amount)}</p>
+                    <p className="font-medium"><FormattedCurrency value={bill.amount} valueClasses="text-sm" symbolClasses="text-xs" /></p>
                     <p className={`text-xs ${urgencyColor}`}>
                       {daysUntilDue === 0 ? 'Vence hoje' : `Vence em ${daysUntilDue} dia(s)`}
                     </p>
@@ -83,7 +77,7 @@ export function UpcomingBills({ recurringTransactions }: UpcomingBillsProps) {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full pt-4">
-            <CalendarClock className="h-8 w-8 text-green-500 mb-2" />
+            <CalendarClock className="h-8 w-8 text-green-400 mb-2" />
             <p className="text-sm text-muted-foreground">Nenhuma conta a vencer nos próximos 30 dias.</p>
           </div>
         )}

@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AddCreditCardForm } from '@/components/AddCreditCardForm';
 import { apiFetch } from '@/lib/api';
+import { FormattedCurrency } from '@/components/FormattedCurrency';
 
 export default function CreditCardsPage() {
   const [cards, setCards] = React.useState([]);
@@ -96,19 +97,12 @@ export default function CreditCardsPage() {
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Meus Cartões de Crédito</h2>
         <div className="flex items-center space-x-2">
-           <Button className="bg-blue-700 hover:bg-blue-800" onClick={handleAddClick}>
+           <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
               <PlusCircle className="mr-2" />
               Adicionar Cartão
             </Button>
@@ -132,7 +126,7 @@ export default function CreditCardsPage() {
                   cards.map((card) => (
                     <TableRow key={card.id}>
                       <TableCell className="font-medium">{card.name}</TableCell>
-                      <TableCell>{formatCurrency(card.limit_amount)}</TableCell>
+                      <TableCell><FormattedCurrency value={card.limit_amount} valueClasses="text-sm" symbolClasses="text-xs" /></TableCell>
                       <TableCell>{card.closing_day}</TableCell>
                       <TableCell>{card.due_day}</TableCell>
                       <TableCell className="text-right">

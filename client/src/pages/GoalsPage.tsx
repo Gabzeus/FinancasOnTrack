@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { buttonVariants } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
+import { FormattedCurrency } from '@/components/FormattedCurrency';
 
 export default function GoalsPage() {
   const [goals, setGoals] = React.useState([]);
@@ -90,13 +91,6 @@ export default function GoalsPage() {
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'Sem prazo';
     return new Date(dateString).toLocaleDateString('pt-BR', {
@@ -109,7 +103,7 @@ export default function GoalsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Metas Financeiras</h2>
         <div className="flex items-center space-x-2">
-          <Button className="bg-blue-700 hover:bg-blue-800" onClick={handleAddClick}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
             <PlusCircle className="mr-2" />
             Nova Meta
           </Button>
@@ -145,11 +139,11 @@ export default function GoalsPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Meta: {formatCurrency(goal.target_amount)}
+                    Meta: <FormattedCurrency value={goal.target_amount} valueClasses="text-sm" symbolClasses="text-xs" />
                   </p>
-                  <p className="text-2xl font-bold text-green-500">
-                    {formatCurrency(goal.current_amount)}
-                  </p>
+                  <div className="text-2xl font-bold text-green-400">
+                    <FormattedCurrency value={goal.current_amount} />
+                  </div>
                   <Progress value={percentage} className="mt-4 h-4" />
                   <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>{percentage.toFixed(1)}%</span>

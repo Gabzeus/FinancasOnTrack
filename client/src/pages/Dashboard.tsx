@@ -25,6 +25,7 @@ import { BudgetAlerts } from '@/components/BudgetAlerts';
 import { UpcomingBills } from '@/components/UpcomingBills';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { FormattedCurrency } from '@/components/FormattedCurrency';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -103,13 +104,6 @@ export default function Dashboard() {
     fetchData();
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       timeZone: 'UTC',
@@ -142,7 +136,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
-           <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => setIsFormOpen(true)}>
+           <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)}>
               <PlusCircle className="mr-2" />
               Adicionar Transação
             </Button>
@@ -165,8 +159,8 @@ export default function Dashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">
-                {formatCurrency(totalIncome)}
+              <div className="text-2xl font-bold text-green-400">
+                <FormattedCurrency value={totalIncome} />
               </div>
             </CardContent>
           </Card>
@@ -176,8 +170,8 @@ export default function Dashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-500">
-                {formatCurrency(totalExpenses)}
+              <div className="text-2xl font-bold text-red-400">
+                <FormattedCurrency value={totalExpenses} />
               </div>
             </CardContent>
           </Card>
@@ -187,8 +181,8 @@ export default function Dashboard() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-500">
-                {formatCurrency(cardExpenses)}
+              <div className="text-2xl font-bold text-red-400">
+                <FormattedCurrency value={cardExpenses} />
               </div>
             </CardContent>
           </Card>
@@ -226,12 +220,12 @@ export default function Dashboard() {
                                 <TableCell
                                     className={`text-right font-medium ${
                                     t.type === 'income'
-                                        ? 'text-green-500'
-                                        : 'text-red-500'
+                                        ? 'text-green-400'
+                                        : 'text-red-400'
                                     }`}
                                 >
                                     {t.type === 'income' ? '+' : '-'}{' '}
-                                    {formatCurrency(t.amount)}
+                                    <FormattedCurrency value={t.amount} valueClasses="text-sm" symbolClasses="text-xs" />
                                 </TableCell>
                                 </TableRow>
                             ))

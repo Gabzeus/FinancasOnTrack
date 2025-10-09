@@ -3,18 +3,12 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { FormattedCurrency } from './FormattedCurrency';
 
 interface BudgetAlertsProps {
   budgets: any[];
   transactions: any[];
 }
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
-};
 
 export function BudgetAlerts({ budgets, transactions }: BudgetAlertsProps) {
   const categoryExpenses = React.useMemo(() => {
@@ -44,7 +38,7 @@ export function BudgetAlerts({ budgets, transactions }: BudgetAlertsProps) {
   }, [budgets, categoryExpenses]);
 
   const getProgressColor = (percentage) => {
-    if (percentage > 100) return 'bg-red-600';
+    if (percentage > 100) return 'bg-red-500';
     if (percentage >= 90) return 'bg-orange-500';
     return 'bg-yellow-400';
   };
@@ -62,21 +56,21 @@ export function BudgetAlerts({ budgets, transactions }: BudgetAlertsProps) {
               <div key={alert.id}>
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm font-medium">{alert.category}</span>
-                  <span className={`text-sm font-bold ${alert.percentage > 100 ? 'text-red-500' : ''}`}>
+                  <span className={`text-sm font-bold ${alert.percentage > 100 ? 'text-red-400' : ''}`}>
                     {alert.percentage.toFixed(0)}%
                   </span>
                 </div>
                 <Progress value={alert.percentage} className="h-2 [&>div]:bg-primary" indicatorClassName={getProgressColor(alert.percentage)} />
                 <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>{formatCurrency(alert.spent)}</span>
-                  <span>{formatCurrency(alert.amount)}</span>
+                  <span><FormattedCurrency value={alert.spent} valueClasses="text-xs" symbolClasses="text-xs" /></span>
+                  <span><FormattedCurrency value={alert.amount} valueClasses="text-xs" symbolClasses="text-xs" /></span>
                 </div>
               </div>
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full pt-4">
-            <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
+            <CheckCircle className="h-8 w-8 text-green-400 mb-2" />
             <p className="text-sm text-muted-foreground">Nenhum orçamento próximo do limite.</p>
             <p className="text-xs text-muted-foreground">Bom trabalho!</p>
           </div>

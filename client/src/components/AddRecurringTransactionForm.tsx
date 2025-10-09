@@ -192,7 +192,7 @@ export function AddRecurringTransactionForm({
           </div>
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="secondary">Cancelar</Button></DialogClose>
-            <Button type="submit" className="bg-blue-700 hover:bg-blue-800">Salvar</Button>
+            <Button type="submit" className="bg-primary hover:bg-primary/90">Salvar</Button>
           </DialogFooter>
         </form>
       </DialogContent>

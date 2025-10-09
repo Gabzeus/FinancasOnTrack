@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { AddTransactionForm } from '@/components/AddTransactionForm';
 import { apiFetch } from '@/lib/api';
+import { FormattedCurrency } from '@/components/FormattedCurrency';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -145,13 +146,6 @@ export default function TransactionsPage() {
     }
   };
 
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
-  };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
   };
@@ -213,16 +207,16 @@ export default function TransactionsPage() {
                       <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
                       <TableCell className="hidden md:table-cell">{formatDate(t.date)}</TableCell>
                       <TableCell className="hidden md:table-cell">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type === 'income' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
                           {t.type === 'income' ? 'Receita' : 'Despesa'}
                         </span>
                       </TableCell>
                       <TableCell
                         className={`font-medium ${
-                          t.type === 'income' ? 'text-green-500' : 'text-red-500'
+                          t.type === 'income' ? 'text-green-400' : 'text-red-400'
                         }`}
                       >
-                        {t.type === 'income' ? '+' : '-'} {formatCurrency(t.amount)}
+                        {t.type === 'income' ? '+' : '-'} <FormattedCurrency value={t.amount} valueClasses="text-sm" symbolClasses="text-xs" />
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
