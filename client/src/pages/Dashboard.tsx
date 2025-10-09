@@ -22,14 +22,18 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BalanceCard } from '@/components/BalanceCard';
 import { BudgetAlerts } from '@/components/BudgetAlerts';
+import { UpcomingBills } from '@/components/UpcomingBills';
 import { apiFetch } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
   const [goals, setGoals] = React.useState([]);
   const [budgets, setBudgets] = React.useState([]);
+  const [recurring, setRecurring] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
+  const { toast } = useToast();
 
   const fetchData = async () => {
     try {
@@ -37,24 +41,27 @@ export default function Dashboard() {
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
-      const [transactionsRes, cardsRes, goalsRes, budgetsRes] = await Promise.all([
+      const [transactionsRes, cardsRes, goalsRes, budgetsRes, recurringRes] = await Promise.all([
         apiFetch('/api/transactions'),
         apiFetch('/api/credit-cards'),
         apiFetch('/api/goals'),
         apiFetch(`/api/budgets/${year}/${month}`),
+        apiFetch('/api/recurring-transactions'),
       ]);
-      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !budgetsRes.ok) {
+      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !budgetsRes.ok || !recurringRes.ok) {
         throw new Error('Failed to fetch data');
       }
       const transactionsData = await transactionsRes.json();
       const cardsData = await cardsRes.json();
       const goalsData = await goalsRes.json();
       const budgetsData = await budgetsRes.json();
+      const recurringData = await recurringRes.json();
 
       setTransactions(transactionsData);
       setCreditCards(cardsData);
       setGoals(goalsData);
       setBudgets(budgetsData);
+      setRecurring(recurringData);
     } catch (error) {
       console.error(error);
     }
@@ -63,6 +70,33 @@ export default function Dashboard() {
   React.useEffect(() => {
     fetchData();
   }, []);
+
+  React.useEffect(() => {
+    if (recurring.length > 0) {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        const threeDaysFromNow = new Date(today);
+        threeDaysFromNow.setUTCDate(today.getUTCDate() + 3);
+
+        const dueSoon = recurring
+            .filter(t => t.type === 'expense')
+            .map(t => ({ ...t, dueDate: new Date(t.start_date) }))
+            .filter(t => {
+                const dueDate = new Date(t.start_date);
+                dueDate.setUTCHours(12,0,0,0);
+                return dueDate >= today && dueDate <= threeDaysFromNow;
+            });
+
+        if (dueSoon.length > 0) {
+            const billDescriptions = dueSoon.map(b => b.description).join(', ');
+            toast({
+                title: 'Alerta de Contas a Vencer!',
+                description: `Você tem ${dueSoon.length} conta(s) vencendo em breve: ${billDescriptions}.`,
+                variant: 'destructive',
+            });
+        }
+    }
+  }, [recurring, toast]);
 
   const handleFormSubmit = (savedTransaction) => {
     // Refetch all data to ensure consistency, especially for goals and budgets
@@ -214,6 +248,7 @@ export default function Dashboard() {
                 </Card>
             </div>
             <div className="lg:col-span-3 grid gap-4 auto-rows-min">
+                <UpcomingBills recurringTransactions={recurring} />
                 <BudgetAlerts budgets={budgets} transactions={transactions} />
                 <ExpenseChart transactions={transactions} />
             </div>
