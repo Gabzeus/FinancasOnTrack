@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -84,6 +85,9 @@ export function AddGoalForm({
           <DialogTitle>
             {isEditMode ? 'Editar Meta Financeira' : 'Adicionar Nova Meta'}
           </DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Edite os detalhes da sua meta.' : 'Crie uma nova meta para economizar dinheiro.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

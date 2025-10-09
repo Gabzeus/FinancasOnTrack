@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -85,6 +86,9 @@ export function AddCreditCardForm({
           <DialogTitle>
             {isEditMode ? 'Editar Cartão de Crédito' : 'Adicionar Novo Cartão'}
           </DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Edite os detalhes do seu cartão.' : 'Adicione um novo cartão de crédito para acompanhar seus gastos.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">

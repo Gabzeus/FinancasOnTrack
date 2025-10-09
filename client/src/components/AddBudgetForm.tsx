@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
@@ -90,6 +91,9 @@ export function AddBudgetForm({
           <DialogTitle>
             {isEditMode ? 'Editar Orçamento' : 'Novo Orçamento para ' + currentMonth.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
           </DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Edite os detalhes do seu orçamento.' : 'Crie um novo orçamento para uma categoria neste mês.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
