@@ -111,12 +111,22 @@ export default function Dashboard() {
   };
 
   const { totalIncome, totalExpenses, cardExpenses } = React.useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
     const income = transactions
-      .filter((t) => t.type === 'income')
+      .filter((t) => {
+        const transactionDate = new Date(t.date);
+        return t.type === 'income' && transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+      })
       .reduce((acc, t) => acc + t.amount, 0);
 
     const expenses = transactions
-      .filter((t) => t.type === 'expense');
+      .filter((t) => {
+        const transactionDate = new Date(t.date);
+        return t.type === 'expense' && transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+      });
       
     const totalExpenses = expenses.reduce((acc, t) => acc + t.amount, 0);
 
@@ -155,7 +165,7 @@ export default function Dashboard() {
           <BalanceCard totalIncome={totalIncome} totalExpenses={totalExpenses} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+              <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -166,7 +176,7 @@ export default function Dashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Despesa Total</CardTitle>
+              <CardTitle className="text-sm font-medium">Despesa do Mês</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
