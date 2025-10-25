@@ -149,7 +149,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
            <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)}>
@@ -167,7 +167,7 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <BalanceCard totalIncome={totalIncome} totalExpenses={totalExpenses} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -203,32 +203,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <div className="lg:col-span-4 grid gap-4 auto-rows-min">
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+            <div className="lg:col-span-2 flex flex-col gap-4">
                 <MonthlySummaryChart transactions={transactions} />
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Alertas e Limites de Cartão</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {creditCards.length > 0 ? creditCards.map(card => {
-                            const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
-                            return (
-                                <div key={card.id}>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-sm font-medium">{card.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            <FormattedCurrency value={card.spent} /> / <FormattedCurrency value={card.limit_amount} />
-                                        </span>
-                                    </div>
-                                    <Progress value={percentage} className="h-3" indicatorClassName={getProgressColor(percentage)} />
-                                </div>
-                            )
-                        }) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">Nenhum cartão de crédito cadastrado.</p>
-                        )}
-                    </CardContent>
-                </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Transações Recentes</CardTitle>
@@ -280,8 +257,31 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
             </div>
-            <div className="lg:col-span-3 grid gap-4 auto-rows-min">
+            <div className="lg:col-span-1 flex flex-col gap-4">
                 <UpcomingBills recurringTransactions={recurring} />
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Limites de Cartão</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {creditCards.length > 0 ? creditCards.map(card => {
+                            const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+                            return (
+                                <div key={card.id}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-sm font-medium">{card.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            <FormattedCurrency value={card.spent} /> / <FormattedCurrency value={card.limit_amount} />
+                                        </span>
+                                    </div>
+                                    <Progress value={percentage} className="h-3" indicatorClassName={getProgressColor(percentage)} />
+                                </div>
+                            )
+                        }) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">Nenhum cartão de crédito cadastrado.</p>
+                        )}
+                    </CardContent>
+                </Card>
                 <ExpenseChart transactions={transactions} />
             </div>
         </div>
