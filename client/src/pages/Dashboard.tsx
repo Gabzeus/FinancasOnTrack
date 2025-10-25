@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CreditCard, Scale, PlusCircle } from 'lucide-react';
+import { DollarSign, CreditCard, Scale, PlusCircle, AlertTriangle } from 'lucide-react';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
@@ -25,6 +25,7 @@ import { UpcomingBills } from '@/components/UpcomingBills';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
+import { Progress } from '@/components/ui/progress';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -64,34 +65,42 @@ export default function Dashboard() {
   }, []);
 
   React.useEffect(() => {
-    if (recurring.length > 0) {
-        const today = new Date();
-        today.setUTCHours(0, 0, 0, 0);
-        const threeDaysFromNow = new Date(today);
-        threeDaysFromNow.setUTCDate(today.getUTCDate() + 3);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setUTCDate(today.getUTCDate() + 3);
 
-        const dueSoon = recurring
-            .filter(t => t.type === 'expense')
-            .map(t => ({ ...t, dueDate: new Date(t.start_date) }))
-            .filter(t => {
-                const dueDate = new Date(t.start_date);
-                dueDate.setUTCHours(12,0,0,0);
-                return dueDate >= today && dueDate <= threeDaysFromNow;
-            });
+    const dueSoonBills = recurring
+        .filter(t => t.type === 'expense')
+        .filter(t => {
+            const dueDate = new Date(t.start_date);
+            dueDate.setUTCHours(12,0,0,0);
+            return dueDate >= today && dueDate <= threeDaysFromNow;
+        });
 
-        if (dueSoon.length > 0) {
-            const billDescriptions = dueSoon.map(b => b.description).join(', ');
-            toast({
-                title: 'Alerta de Contas a Vencer!',
-                description: `Você tem ${dueSoon.length} conta(s) vencendo em breve: ${billDescriptions}.`,
-                variant: 'destructive',
-            });
-        }
+    if (dueSoonBills.length > 0) {
+        const billDescriptions = dueSoonBills.map(b => b.description).join(', ');
+        toast({
+            title: 'Alerta de Contas a Vencer!',
+            description: `Você tem ${dueSoonBills.length} conta(s) vencendo em breve: ${billDescriptions}.`,
+            variant: 'destructive',
+        });
     }
-  }, [recurring, toast]);
+
+    creditCards.forEach(card => {
+      const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+      if (percentage >= 90) {
+        toast({
+          title: `Alerta de Limite: ${card.name}`,
+          description: `Você utilizou ${percentage.toFixed(0)}% do seu limite.`,
+          variant: percentage >= 100 ? 'destructive' : 'default',
+        });
+      }
+    });
+
+  }, [recurring, creditCards, toast]);
 
   const handleFormSubmit = (savedTransaction) => {
-    // Refetch all data to ensure consistency, especially for goals
     fetchData();
   };
 
@@ -131,6 +140,12 @@ export default function Dashboard() {
       cardExpenses,
     };
   }, [transactions]);
+
+  const getProgressColor = (percentage) => {
+    if (percentage > 100) return 'bg-red-500';
+    if (percentage >= 90) return 'bg-orange-500';
+    return 'bg-primary';
+  };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -191,6 +206,29 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <div className="lg:col-span-4 grid gap-4 auto-rows-min">
                 <MonthlySummaryChart transactions={transactions} />
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Alertas e Limites de Cartão</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {creditCards.length > 0 ? creditCards.map(card => {
+                            const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+                            return (
+                                <div key={card.id}>
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-sm font-medium">{card.name}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            <FormattedCurrency value={card.spent} /> / <FormattedCurrency value={card.limit_amount} />
+                                        </span>
+                                    </div>
+                                    <Progress value={percentage} className="h-3" indicatorClassName={getProgressColor(percentage)} />
+                                </div>
+                            )
+                        }) : (
+                            <p className="text-sm text-muted-foreground text-center py-4">Nenhum cartão de crédito cadastrado.</p>
+                        )}
+                    </CardContent>
+                </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Transações Recentes</CardTitle>

@@ -31,6 +31,82 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
+// Get open invoice for a specific credit card
+router.get('/:id/invoice', protect, async (req, res) => {
+  const userId = req.user!.id;
+  const cardId = parseInt(req.params.id, 10);
+
+  try {
+    const card = await db.selectFrom('credit_cards')
+      .selectAll()
+      .where('id', '=', cardId)
+      .where('user_id', '=', userId)
+      .executeTakeFirst();
+
+    if (!card) {
+      res.status(404).json({ message: 'Credit card not found' });
+      return;
+    }
+
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // 0-11
+
+    const closingDay = card.closing_day;
+    const dueDay = card.due_day;
+
+    let invoiceStartDate: Date;
+    let invoiceEndDate: Date;
+    let dueDate: Date;
+
+    const closingDateThisMonth = new Date(Date.UTC(currentYear, currentMonth, closingDay));
+
+    if (today.getUTCDate() > closingDay) {
+      // Invoice period is for next month's payment
+      invoiceStartDate = new Date(Date.UTC(currentYear, currentMonth, closingDay + 1));
+      invoiceEndDate = new Date(Date.UTC(currentYear, currentMonth + 1, closingDay));
+      
+      let dueMonth = currentMonth + 1;
+      let dueYear = currentYear;
+      if (dueMonth > 11) {
+        dueMonth = 0;
+        dueYear += 1;
+      }
+      dueDate = new Date(Date.UTC(dueYear, dueMonth, dueDay));
+
+    } else {
+      // Invoice period is for this month's payment
+      invoiceStartDate = new Date(Date.UTC(currentYear, currentMonth - 1, closingDay + 1));
+      invoiceEndDate = new Date(Date.UTC(currentYear, currentMonth, closingDay));
+      dueDate = new Date(Date.UTC(currentYear, currentMonth, dueDay));
+    }
+    
+    const transactions = await db.selectFrom('transactions')
+      .selectAll()
+      .where('credit_card_id', '=', cardId)
+      .where('user_id', '=', userId)
+      .where('type', '=', 'expense')
+      .where('date', '>=', invoiceStartDate.toISOString().split('T')[0])
+      .where('date', '<=', invoiceEndDate.toISOString().split('T')[0])
+      .orderBy('date', 'asc')
+      .execute();
+
+    const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+
+    res.json({
+      startDate: invoiceStartDate.toISOString(),
+      endDate: invoiceEndDate.toISOString(),
+      dueDate: dueDate.toISOString(),
+      transactions,
+      totalAmount,
+    });
+
+  } catch (error) {
+    console.error('Failed to fetch invoice data:', error);
+    res.status(500).json({ message: 'Failed to fetch invoice data' });
+  }
+});
+
 // Add a new credit card for the logged-in user
 router.post('/', protect, async (req, res) => {
   const userId = req.user!.id;

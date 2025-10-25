@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { MoreHorizontal, Pencil, PlusCircle, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, PlusCircle, Trash2, FileText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ import { apiFetch } from '@/lib/api';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { InvoiceDialog } from '@/components/InvoiceDialog';
 
 export default function CreditCardsPage() {
   const [cards, setCards] = React.useState([]);
@@ -31,6 +32,8 @@ export default function CreditCardsPage() {
   const [cardToEdit, setCardToEdit] = React.useState(null);
   const [cardToDelete, setCardToDelete] = React.useState(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
+  const [selectedCardForInvoice, setSelectedCardForInvoice] = React.useState(null);
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = React.useState(false);
   const { toast } = useToast();
 
   const fetchCards = async () => {
@@ -81,6 +84,11 @@ export default function CreditCardsPage() {
   const handleDeleteClick = (card) => {
     setCardToDelete(card);
     setIsDeleteAlertOpen(true);
+  };
+
+  const handleViewInvoiceClick = (card) => {
+    setSelectedCardForInvoice(card);
+    setIsInvoiceDialogOpen(true);
   };
 
   const confirmDelete = async () => {
@@ -136,6 +144,10 @@ export default function CreditCardsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewInvoiceClick(card)}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Ver Fatura
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEditClick(card)}>
                         <Pencil className="mr-2 h-4 w-4" />
                         Editar
@@ -181,6 +193,14 @@ export default function CreditCardsPage() {
         onFormSubmit={handleFormSubmit}
         cardToEdit={cardToEdit}
       />
+
+      {selectedCardForInvoice && (
+        <InvoiceDialog
+          open={isInvoiceDialogOpen}
+          setOpen={setIsInvoiceDialogOpen}
+          card={selectedCardForInvoice}
+        />
+      )}
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
         <AlertDialogContent>
