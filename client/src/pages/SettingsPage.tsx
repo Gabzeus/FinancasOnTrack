@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [settings, setSettings] = React.useState({
     email_notifications_enabled: true,
-    budget_alerts_enabled: true,
+    credit_card_limit_alerts_enabled: true,
   });
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -26,7 +26,7 @@ export default function SettingsPage() {
         const data = await response.json();
         setSettings({
           email_notifications_enabled: data.email_notifications_enabled === 'true',
-          budget_alerts_enabled: data.budget_alerts_enabled === 'true',
+          credit_card_limit_alerts_enabled: data.credit_card_limit_alerts_enabled === 'true',
         });
       } catch (error) {
         console.error(error);
@@ -122,15 +122,15 @@ export default function SettingsPage() {
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <Label htmlFor="budget-alerts" className="text-base">Alertas de Orçamento</Label>
+                <Label htmlFor="credit-card-limit-alerts" className="text-base">Alertas de Limite do Cartão</Label>
                  <p className="text-sm text-muted-foreground">
-                  Receba notificações quando se aproximar ou exceder um orçamento.
+                  Receba notificações quando se aproximar do limite de um cartão de crédito.
                 </p>
               </div>
               <Switch
-                id="budget-alerts"
-                checked={settings.budget_alerts_enabled}
-                onCheckedChange={(checked) => handleSettingChange('budget_alerts_enabled', checked)}
+                id="credit-card-limit-alerts"
+                checked={settings.credit_card_limit_alerts_enabled}
+                onCheckedChange={(checked) => handleSettingChange('credit_card_limit_alerts_enabled', checked)}
                 disabled={!settings.email_notifications_enabled}
               />
             </div>

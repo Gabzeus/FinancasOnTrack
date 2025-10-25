@@ -2,17 +2,27 @@
 import express from 'express';
 import { db } from '../db/database';
 import { protect } from '../middleware/auth';
+import { sql } from 'kysely';
 
 const router = express.Router();
 
-// Get all credit cards for the logged-in user
+// Get all credit cards for the logged-in user with spent amount
 router.get('/', protect, async (req, res) => {
   const userId = req.user!.id;
   try {
     const cards = await db.selectFrom('credit_cards')
-      .selectAll()
-      .where('user_id', '=', userId)
-      .orderBy('name', 'asc')
+      .leftJoin('transactions', 'transactions.credit_card_id', 'credit_cards.id')
+      .select([
+        'credit_cards.id',
+        'credit_cards.name',
+        'credit_cards.limit_amount',
+        'credit_cards.closing_day',
+        'credit_cards.due_day',
+        sql<number>`COALESCE(SUM(CASE WHEN transactions.type = 'expense' THEN transactions.amount ELSE 0 END), 0)`.as('spent')
+      ])
+      .where('credit_cards.user_id', '=', userId)
+      .groupBy('credit_cards.id')
+      .orderBy('credit_cards.name', 'asc')
       .execute();
     res.json(cards);
   } catch (error) {
@@ -92,21 +102,34 @@ router.delete('/:id', protect, async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await db
-            .deleteFrom('credit_cards')
-            .where('id', '=', parseInt(id, 10))
-            .where('user_id', '=', userId)
-            .executeTakeFirst();
+        // We need to set credit_card_id to NULL in transactions before deleting the card
+        await db.transaction().execute(async (trx) => {
+            await trx
+                .updateTable('transactions')
+                .set({ credit_card_id: null })
+                .where('credit_card_id', '=', parseInt(id, 10))
+                .where('user_id', '=', userId)
+                .execute();
 
-        if (result.numDeletedRows === 0n) {
-            res.status(404).json({ message: 'Credit card not found' });
-            return;
-        }
+            const result = await trx
+                .deleteFrom('credit_cards')
+                .where('id', '=', parseInt(id, 10))
+                .where('user_id', '=', userId)
+                .executeTakeFirst();
+
+            if (result.numDeletedRows === 0n) {
+                throw new Error('Credit card not found');
+            }
+        });
         
         res.status(204).send();
     } catch (error) {
         console.error('Failed to delete credit card:', error);
-        res.status(500).json({ message: 'Failed to delete credit card' });
+        if (error.message === 'Credit card not found') {
+            res.status(404).json({ message: 'Credit card not found' });
+        } else {
+            res.status(500).json({ message: 'Failed to delete credit card' });
+        }
     }
 });
 

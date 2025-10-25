@@ -2,7 +2,6 @@
 import express from 'express';
 import { db } from '../db/database';
 import { sql } from 'kysely';
-import { checkBudgetAndNotify } from '../services/notificationService';
 import { protect } from '../middleware/auth';
 
 const router = express.Router();
@@ -91,10 +90,6 @@ router.post('/', protect, async (req, res) => {
         .executeTakeFirstOrThrow();
     });
 
-    if (type === 'expense') {
-        checkBudgetAndNotify(userId, category, date).catch(console.error);
-    }
-
     res.status(201).json(result);
   } catch (error) {
     console.error('Failed to add transaction:', error);
@@ -150,10 +145,6 @@ router.put('/:id', protect, async (req, res) => {
           .where('transactions.id', '=', updatedTransaction.id)
           .executeTakeFirstOrThrow();
         
-        if (type === 'expense') {
-            checkBudgetAndNotify(userId, category, date).catch(console.error);
-        }
-
         res.json(result);
     } catch (error) {
         console.error('Failed to update transaction:', error);
@@ -176,10 +167,6 @@ router.delete('/:id', protect, async (req, res) => {
         if (!deletedTransaction) {
             res.status(404).json({ message: 'Transaction not found' });
             return;
-        }
-        
-        if (deletedTransaction.type === 'expense') {
-            checkBudgetAndNotify(userId, deletedTransaction.category, deletedTransaction.date).catch(console.error);
         }
         
         res.status(204).send();

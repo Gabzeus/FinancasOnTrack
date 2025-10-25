@@ -1,13 +1,5 @@
 
 import * as React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { MoreHorizontal, Pencil, PlusCircle, Trash2 } from 'lucide-react';
@@ -30,6 +22,8 @@ import {
 import { AddCreditCardForm } from '@/components/AddCreditCardForm';
 import { apiFetch } from '@/lib/api';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 
 export default function CreditCardsPage() {
   const [cards, setCards] = React.useState([]);
@@ -37,6 +31,7 @@ export default function CreditCardsPage() {
   const [cardToEdit, setCardToEdit] = React.useState(null);
   const [cardToDelete, setCardToDelete] = React.useState(null);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
+  const { toast } = useToast();
 
   const fetchCards = async () => {
     try {
@@ -55,11 +50,21 @@ export default function CreditCardsPage() {
     fetchCards();
   }, []);
 
+  React.useEffect(() => {
+    cards.forEach(card => {
+      const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+      if (percentage >= 90) {
+        toast({
+          title: `Alerta de Limite: ${card.name}`,
+          description: `Você utilizou ${percentage.toFixed(0)}% do seu limite.`,
+          variant: percentage >= 100 ? 'destructive' : 'default',
+        });
+      }
+    });
+  }, [cards, toast]);
+
   const handleFormSubmit = (savedCard) => {
-    setCards(prev => 
-      [...prev.filter(c => c.id !== savedCard.id), savedCard]
-      .sort((a, b) => a.name.localeCompare(b.name))
-    );
+    fetchCards(); // Refetch to get updated spent amount
     setCardToEdit(null);
   };
 
@@ -97,6 +102,12 @@ export default function CreditCardsPage() {
     }
   };
 
+  const getProgressColor = (percentage) => {
+    if (percentage > 100) return 'bg-red-500';
+    if (percentage >= 90) return 'bg-orange-500';
+    return 'bg-primary';
+  };
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -108,61 +119,61 @@ export default function CreditCardsPage() {
             </Button>
         </div>
       </div>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Limite</TableHead>
-                  <TableHead>Dia de Fechamento</TableHead>
-                  <TableHead>Dia de Vencimento</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cards.length > 0 ? (
-                  cards.map((card) => (
-                    <TableRow key={card.id}>
-                      <TableCell className="font-medium">{card.name}</TableCell>
-                      <TableCell><FormattedCurrency value={card.limit_amount} valueClasses="text-sm" symbolClasses="text-xs" /></TableCell>
-                      <TableCell>{card.closing_day}</TableCell>
-                      <TableCell>{card.due_day}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Abrir menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditClick(card)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(card)} className="text-red-500 focus:text-red-500">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
-                      Nenhum cartão de crédito cadastrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      
+      {cards.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => {
+            const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+            return (
+              <Card key={card.id}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-lg font-semibold">{card.name}</CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditClick(card)}>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteClick(card)} className="text-red-500 focus:text-red-500">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Limite: <FormattedCurrency value={card.limit_amount} valueClasses="text-sm" symbolClasses="text-xs" />
+                    </p>
+                    <div className="text-2xl font-bold text-red-400">
+                      <FormattedCurrency value={card.spent} />
+                    </div>
+                    <Progress value={percentage} className="h-4" indicatorClassName={getProgressColor(percentage)} />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>{percentage.toFixed(1)}% usado</span>
+                      <span>
+                        Vencimento: dia {card.due_day}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
+          <p className="text-muted-foreground">Nenhum cartão de crédito cadastrado.</p>
+          <Button variant="link" onClick={handleAddClick}>Cadastre um agora</Button>
+        </div>
+      )}
 
       <AddCreditCardForm
         open={isFormOpen}
@@ -176,7 +187,7 @@ export default function CreditCardsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. Isso excluirá permanentemente o cartão de crédito.
+              Essa ação não pode ser desfeita. Isso excluirá permanentemente o cartão de crédito e suas transações associadas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

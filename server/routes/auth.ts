@@ -40,7 +40,7 @@ router.post('/register', async (req, res) => {
     // Create default settings for the new user
     await db.insertInto('settings').values([
         { user_id: newUser.id, key: 'email_notifications_enabled', value: 'true' },
-        { user_id: newUser.id, key: 'budget_alerts_enabled', value: 'true' },
+        { user_id: newUser.id, key: 'credit_card_limit_alerts_enabled', value: 'true' },
     ]).execute();
 
     const token = jwt.sign({ id: newUser.id }, JWT_SECRET, {

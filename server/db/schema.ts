@@ -29,14 +29,6 @@ export interface CreditCardsTable {
   due_day: number;
 }
 
-export interface BudgetsTable {
-  id: Generated<number>;
-  user_id: number;
-  category: string;
-  amount: number;
-  month: string; // YYYY-MM format
-}
-
 export interface GoalsTable {
   id: Generated<number>;
   user_id: number;
@@ -69,7 +61,6 @@ export interface Database {
   users: UsersTable;
   transactions: TransactionsTable;
   credit_cards: CreditCardsTable;
-  budgets: BudgetsTable;
   goals: GoalsTable;
   recurring_transactions: RecurringTransactionsTable;
   settings: SettingsTable;

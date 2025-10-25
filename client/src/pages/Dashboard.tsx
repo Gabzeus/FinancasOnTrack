@@ -15,13 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CreditCard, Wallet, PlusCircle } from 'lucide-react';
+import { DollarSign, CreditCard, Scale, PlusCircle } from 'lucide-react';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BalanceCard } from '@/components/BalanceCard';
-import { BudgetAlerts } from '@/components/BudgetAlerts';
 import { UpcomingBills } from '@/components/UpcomingBills';
 import { apiFetch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -31,37 +30,29 @@ export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
   const [goals, setGoals] = React.useState([]);
-  const [budgets, setBudgets] = React.useState([]);
   const [recurring, setRecurring] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const { toast } = useToast();
 
   const fetchData = async () => {
     try {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-
-      const [transactionsRes, cardsRes, goalsRes, budgetsRes, recurringRes] = await Promise.all([
+      const [transactionsRes, cardsRes, goalsRes, recurringRes] = await Promise.all([
         apiFetch('/api/transactions'),
         apiFetch('/api/credit-cards'),
         apiFetch('/api/goals'),
-        apiFetch(`/api/budgets/${year}/${month}`),
         apiFetch('/api/recurring-transactions'),
       ]);
-      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !budgetsRes.ok || !recurringRes.ok) {
+      if (!transactionsRes.ok || !cardsRes.ok || !goalsRes.ok || !recurringRes.ok) {
         throw new Error('Failed to fetch data');
       }
       const transactionsData = await transactionsRes.json();
       const cardsData = await cardsRes.json();
       const goalsData = await goalsRes.json();
-      const budgetsData = await budgetsRes.json();
       const recurringData = await recurringRes.json();
 
       setTransactions(transactionsData);
       setCreditCards(cardsData);
       setGoals(goalsData);
-      setBudgets(budgetsData);
       setRecurring(recurringData);
     } catch (error) {
       console.error(error);
@@ -100,7 +91,7 @@ export default function Dashboard() {
   }, [recurring, toast]);
 
   const handleFormSubmit = (savedTransaction) => {
-    // Refetch all data to ensure consistency, especially for goals and budgets
+    // Refetch all data to ensure consistency, especially for goals
     fetchData();
   };
 
@@ -253,7 +244,6 @@ export default function Dashboard() {
             </div>
             <div className="lg:col-span-3 grid gap-4 auto-rows-min">
                 <UpcomingBills recurringTransactions={recurring} />
-                <BudgetAlerts budgets={budgets} transactions={transactions} />
                 <ExpenseChart transactions={transactions} />
             </div>
         </div>
