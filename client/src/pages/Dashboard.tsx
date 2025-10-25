@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CreditCard, Scale, PlusCircle, AlertTriangle } from 'lucide-react';
+import { DollarSign, CreditCard, PlusCircle } from 'lucide-react';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
@@ -26,6 +26,9 @@ import { apiFetch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
 import { Progress } from '@/components/ui/progress';
+import { DateRangePicker } from '@/components/DateRangePicker';
+import { DateRange } from 'react-day-picker';
+import { subDays, startOfMonth, endOfMonth } from 'date-fns';
 
 export default function Dashboard() {
   const [transactions, setTransactions] = React.useState([]);
@@ -34,6 +37,10 @@ export default function Dashboard() {
   const [recurring, setRecurring] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const { toast } = useToast();
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date()),
+  });
 
   const fetchData = async () => {
     try {
@@ -110,23 +117,24 @@ export default function Dashboard() {
     });
   };
 
-  const { totalIncome, totalExpenses, cardExpenses } = React.useMemo(() => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+  const filteredTransactions = React.useMemo(() => {
+    if (!dateRange?.from) {
+      return transactions;
+    }
+    const toDate = dateRange.to ?? dateRange.from;
+    return transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      transactionDate.setUTCHours(0,0,0,0);
+      return transactionDate >= dateRange.from! && transactionDate <= toDate;
+    });
+  }, [transactions, dateRange]);
 
-    const income = transactions
-      .filter((t) => {
-        const transactionDate = new Date(t.date);
-        return t.type === 'income' && transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
-      })
+  const { totalIncome, totalExpenses, cardExpenses } = React.useMemo(() => {
+    const income = filteredTransactions
+      .filter((t) => t.type === 'income')
       .reduce((acc, t) => acc + t.amount, 0);
 
-    const expenses = transactions
-      .filter((t) => {
-        const transactionDate = new Date(t.date);
-        return t.type === 'expense' && transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
-      });
+    const expenses = filteredTransactions.filter((t) => t.type === 'expense');
       
     const totalExpenses = expenses.reduce((acc, t) => acc + t.amount, 0);
 
@@ -139,7 +147,7 @@ export default function Dashboard() {
       totalExpenses: totalExpenses,
       cardExpenses,
     };
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const getProgressColor = (percentage) => {
     if (percentage > 100) return 'bg-red-500';
@@ -152,6 +160,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
+           <DateRangePicker date={dateRange} setDate={setDateRange} />
            <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)}>
               <PlusCircle className="mr-2" />
               Adicionar Transação
@@ -171,7 +180,7 @@ export default function Dashboard() {
           <BalanceCard totalIncome={totalIncome} totalExpenses={totalExpenses} />
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita do Mês</CardTitle>
+              <CardTitle className="text-sm font-medium">Receita</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -182,7 +191,7 @@ export default function Dashboard() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Despesa do Mês</CardTitle>
+              <CardTitle className="text-sm font-medium">Despesa</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -205,7 +214,7 @@ export default function Dashboard() {
         </div>
         <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
             <div className="lg:col-span-2 flex flex-col gap-4">
-                <MonthlySummaryChart transactions={transactions} />
+                <MonthlySummaryChart transactions={filteredTransactions} />
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between">
                         <CardTitle>Transações Recentes</CardTitle>
@@ -224,8 +233,8 @@ export default function Dashboard() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {transactions.length > 0 ? (
-                            transactions.slice(0, 5).map((t) => (
+                            {filteredTransactions.length > 0 ? (
+                            filteredTransactions.slice(0, 5).map((t) => (
                                 <TableRow key={t.id}>
                                 <TableCell>
                                   <div>{t.description}</div>
@@ -248,7 +257,7 @@ export default function Dashboard() {
                             ) : (
                             <TableRow>
                                 <TableCell colSpan={4} className="text-center h-24">
-                                Nenhuma transação encontrada.
+                                Nenhuma transação encontrada no período.
                                 </TableCell>
                             </TableRow>
                             )}
@@ -282,7 +291,7 @@ export default function Dashboard() {
                         )}
                     </CardContent>
                 </Card>
-                <ExpenseChart transactions={transactions} />
+                <ExpenseChart transactions={filteredTransactions} />
             </div>
         </div>
       </div>

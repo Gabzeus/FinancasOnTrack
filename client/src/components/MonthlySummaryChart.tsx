@@ -2,33 +2,30 @@
 import * as React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, parseISO } from 'date-fns';
 
 export function MonthlySummaryChart({ transactions }) {
   const monthlyData = React.useMemo(() => {
     const data = transactions.reduce((acc, t) => {
-      const month = new Date(t.date).toLocaleString('default', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+      const month = format(parseISO(t.date), 'MMM/yy');
       if (!acc[month]) {
-        acc[month] = { name: month, income: 0, expense: 0 };
+        acc[month] = { name: month, income: 0, expense: 0, date: parseISO(t.date) };
       }
       acc[month][t.type] += t.amount;
       return acc;
     }, {});
 
-    return Object.values(data).sort((a, b) => {
-        const dateA = new Date(`1 ${a.name.replace("'", " 20")}`);
-        const dateB = new Date(`1 ${b.name.replace("'", " 20")}`);
-        return dateA - dateB;
-    }).slice(-6); // Get last 6 months
+    return Object.values(data).sort((a, b) => a.date - b.date);
   }, [transactions]);
 
   if (monthlyData.length === 0) {
     return (
       <Card className="col-span-1 lg:col-span-2">
         <CardHeader>
-          <CardTitle>Resumo Mensal</CardTitle>
+          <CardTitle>Resumo do Período</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center h-[350px]">
-          <p className="text-muted-foreground">Nenhuma transação registrada ainda.</p>
+          <p className="text-muted-foreground">Nenhuma transação no período selecionado.</p>
         </CardContent>
       </Card>
     );
@@ -37,7 +34,7 @@ export function MonthlySummaryChart({ transactions }) {
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>Resumo Mensal (Últimos 6 meses)</CardTitle>
+        <CardTitle>Resumo do Período</CardTitle>
       </CardHeader>
       <CardContent>
         <div style={{ width: '100%', height: 350 }}>
