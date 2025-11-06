@@ -10,6 +10,7 @@ declare global {
     interface Request {
       user?: {
         id: number;
+        role: 'admin' | 'user';
       };
     }
   }
@@ -26,10 +27,18 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-    req.user = { id: decoded.id };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number, role: 'admin' | 'user' };
+    req.user = { id: decoded.id, role: decoded.role };
     next();
   } catch (error) {
     res.status(401).json({ message: 'Não autorizado, token inválido' });
   }
+};
+
+export const adminOnly = (req: Request, res: Response, next: NextFunction) => {
+    if (req.user?.role !== 'admin') {
+        res.status(403).json({ message: 'Acesso negado. Rota apenas para administradores.' });
+        return;
+    }
+    next();
 };

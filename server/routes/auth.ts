@@ -29,12 +29,22 @@ router.post('/register', async (req, res) => {
       return;
     }
 
+    // Check if this is the first user. If so, make them an admin.
+    const userCount = await db.selectFrom('users').select(db.fn.count('id').as('count')).executeTakeFirst();
+    const role = userCount && Number(userCount.count) === 0 ? 'admin' : 'user';
+    const licenseStatus = role === 'admin' ? 'active' : 'inactive';
+
     const password_hash = await bcrypt.hash(password, 10);
 
     const newUser = await db
       .insertInto('users')
-      .values({ email, password_hash })
-      .returning(['id', 'email'])
+      .values({ 
+        email, 
+        password_hash,
+        role,
+        license_status: licenseStatus,
+      })
+      .returning(['id', 'email', 'role'])
       .executeTakeFirstOrThrow();
 
     // Create default settings for the new user
@@ -43,11 +53,11 @@ router.post('/register', async (req, res) => {
         { user_id: newUser.id, key: 'credit_card_limit_alerts_enabled', value: 'true' },
     ]).execute();
 
-    const token = jwt.sign({ id: newUser.id }, JWT_SECRET, {
+    const token = jwt.sign({ id: newUser.id, role: newUser.role }, JWT_SECRET, {
       expiresIn: '30d',
     });
 
-    res.status(201).json({ token, user: { id: newUser.id, email: newUser.email } });
+    res.status(201).json({ token, user: { id: newUser.id, email: newUser.email, role: newUser.role } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
@@ -85,11 +95,11 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
       expiresIn: '30d',
     });
 
-    res.status(200).json({ token, user: { id: user.id, email: user.email } });
+    res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });

@@ -6,6 +6,9 @@ export interface UsersTable {
   email: string;
   password_hash: string;
   created_at: Generated<string>;
+  role: 'admin' | 'user';
+  license_status: 'active' | 'inactive' | 'expired';
+  license_expiry_date: string | null;
 }
 
 export interface TransactionsTable {

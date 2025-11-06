@@ -8,6 +8,7 @@ import creditCardsRouter from './routes/creditCards';
 import goalsRouter from './routes/goals';
 import recurringTransactionsRouter from './routes/recurringTransactions';
 import settingsRouter from './routes/settings';
+import adminRouter from './routes/admin';
 import { processRecurringTransactions } from './services/recurringProcessor.js';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/api/credit-cards', creditCardsRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/recurring-transactions', recurringTransactionsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/admin', adminRouter);
 
 // Function to set up and run the recurring transaction processor
 function setupRecurringProcessor() {

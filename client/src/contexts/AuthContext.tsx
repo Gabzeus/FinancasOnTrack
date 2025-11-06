@@ -1,12 +1,18 @@
 
 import * as React from 'react';
 
+interface User {
+  id: number;
+  email: string;
+  role: 'admin' | 'user';
+}
+
 interface AuthContextType {
   token: string | null;
-  user: { id: number; email: string } | null;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, user: { id: number; email: string }) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
 }
 
@@ -14,7 +20,7 @@ const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = React.useState<string | null>(() => localStorage.getItem('authToken'));
-  const [user, setUser] = React.useState<{ id: number; email: string } | null>(() => {
+  const [user, setUser] = React.useState<User | null>(() => {
     const storedUser = localStorage.getItem('authUser');
     return storedUser ? JSON.parse(storedUser) : null;
   });
@@ -26,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (newToken: string, newUser: { id: number; email: string }) => {
+  const login = (newToken: string, newUser: User) => {
     localStorage.setItem('authToken', newToken);
     localStorage.setItem('authUser', JSON.stringify(newUser));
     setToken(newToken);
