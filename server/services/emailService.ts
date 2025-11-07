@@ -94,3 +94,29 @@ export function sendLicenseExpirationWarningEmail(userEmail: string, expiryDate:
     `,
   });
 }
+
+/**
+ * Sends a password reset link.
+ * @param userEmail - The recipient's email address.
+ * @param resetUrl - The URL to reset the password.
+ */
+export function sendPasswordResetEmail(userEmail: string, resetUrl: string) {
+  sendEmail({
+    to: userEmail,
+    subject: 'Redefinição de Senha - FinTrack',
+    body: `
+      Olá,
+
+      Você solicitou a redefinição da sua senha para o FinTrack.
+      
+      Clique no link abaixo para criar uma nova senha. Este link é válido por 10 minutos.
+
+      ${resetUrl}
+
+      Se você não solicitou isso, por favor, ignore este email.
+
+      Atenciosamente,
+      Equipe FinTrack
+    `,
+  });
+}

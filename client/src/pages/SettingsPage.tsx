@@ -8,6 +8,113 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+function ChangePasswordDialog() {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [currentPassword, setCurrentPassword] = React.useState('');
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const { toast } = useToast();
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: 'Erro',
+        description: 'As novas senhas não coincidem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const response = await apiFetch('/api/settings/change-password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Falha ao alterar a senha.');
+      }
+      toast({
+        title: 'Sucesso!',
+        description: 'Sua senha foi alterada.',
+      });
+      setIsOpen(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="outline">Alterar Senha</Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Alterar Senha</AlertDialogTitle>
+          <AlertDialogDescription>
+            Para sua segurança, por favor, insira sua senha atual e a nova senha.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="current-password">Senha Atual</Label>
+            <Input
+              id="current-password"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="new-password">Nova Senha</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-new-password">Confirmar Nova Senha</Label>
+            <Input
+              id="confirm-new-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleChangePassword}>Salvar Nova Senha</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -161,7 +268,7 @@ export default function SettingsPage() {
               </div>
               <Switch id="two-factor" disabled />
             </div>
-            <Button variant="outline" disabled>Alterar Senha</Button>
+            <ChangePasswordDialog />
           </CardContent>
         </Card>
       </div>

@@ -9,6 +9,8 @@ export interface UsersTable {
   role: 'admin' | 'user';
   license_status: 'active' | 'inactive' | 'expired';
   license_expiry_date: string | null;
+  password_reset_token: string | null;
+  password_reset_expires: string | null;
 }
 
 export interface TransactionsTable {

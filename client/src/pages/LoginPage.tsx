@@ -16,6 +16,81 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Wallet } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+function ForgotPasswordDialog() {
+  const [email, setEmail] = React.useState('');
+  const { toast } = useToast();
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  const handleForgotPassword = async () => {
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Falha ao solicitar redefinição de senha');
+      }
+      toast({
+        title: 'Verifique seu email',
+        description: data.message,
+      });
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  return (
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+      <AlertDialogTrigger asChild>
+        <Button variant="link" className="px-0 text-xs h-auto py-0">
+          Esqueceu a senha?
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Redefinir Senha</AlertDialogTitle>
+          <AlertDialogDescription>
+            Digite seu email para receber um link de redefinição de senha.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="forgot-email">Email</Label>
+          <Input
+            id="forgot-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="seu@email.com"
+            required
+          />
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={handleForgotPassword}>Enviar</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default function LoginPage() {
   const [loginEmail, setLoginEmail] = React.useState('');
@@ -110,7 +185,10 @@ export default function LoginPage() {
                   <Input id="login-email" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="login-password">Senha</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="login-password">Senha</Label>
+                    <ForgotPasswordDialog />
+                  </div>
                   <Input id="login-password" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required />
                 </div>
               </CardContent>

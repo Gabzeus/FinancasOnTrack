@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from './components/ui/button';
 import { Toaster } from './components/ui/toaster';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function SidebarNav() {
   const { user } = useAuth();
@@ -232,6 +233,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/*" element={<MainLayout />} />
         </Route>
