@@ -25,19 +25,27 @@ router.get('/users', async (req, res) => {
   }
 });
 
-const licenseUpdateSchema = z.object({
-    license_status: z.enum(['active', 'inactive']),
+const userUpdateSchema = z.object({
+    license_status: z.enum(['active', 'inactive', 'expired']),
     license_expiry_date: z.string().optional().nullable(),
+    role: z.enum(['admin', 'user']),
 });
 
-// Update a user's license
-router.put('/users/:id/license', async (req, res) => {
+// Update a user's license and role
+router.put('/users/:id', async (req, res) => {
     const userIdToUpdate = parseInt(req.params.id, 10);
+    const currentAdminId = req.user!.id;
 
     try {
-        const { license_status, license_expiry_date } = licenseUpdateSchema.parse(req.body);
+        const { license_status, license_expiry_date, role } = userUpdateSchema.parse(req.body);
 
-        const user = await db.selectFrom('users').where('id', '=', userIdToUpdate).select(['id', 'email']).executeTakeFirst();
+        // Prevent admin from changing their own role
+        if (userIdToUpdate === currentAdminId && role !== 'admin') {
+            res.status(403).json({ message: 'Administrators cannot change their own role.' });
+            return;
+        }
+
+        const user = await db.selectFrom('users').where('id', '=', userIdToUpdate).select(['id', 'email', 'license_status']).executeTakeFirst();
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
@@ -48,15 +56,16 @@ router.put('/users/:id/license', async (req, res) => {
             .set({
                 license_status,
                 license_expiry_date: license_expiry_date || null,
+                role,
             })
             .where('id', '=', userIdToUpdate)
             .returning(['id', 'email', 'role', 'license_status', 'license_expiry_date'])
             .executeTakeFirstOrThrow();
         
-        // Send email notification based on status change
-        if (license_status === 'active') {
+        // Send email notification based on license status change
+        if (user.license_status !== 'active' && license_status === 'active') {
             sendLicenseActivationEmail(updatedUser.email, updatedUser.license_expiry_date);
-        } else if (license_status === 'inactive') {
+        } else if (user.license_status === 'active' && license_status === 'inactive') {
             sendLicenseDeactivationEmail(updatedUser.email);
         }
 
@@ -67,8 +76,8 @@ router.put('/users/:id/license', async (req, res) => {
             res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
             return;
         }
-        console.error('Failed to update user license:', error);
-        res.status(500).json({ message: 'Failed to update user license' });
+        console.error('Failed to update user:', error);
+        res.status(500).json({ message: 'Failed to update user' });
     }
 });
 
