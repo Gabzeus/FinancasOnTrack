@@ -24,8 +24,13 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
+import { useAuth } from '@/contexts/AuthContext';
+import { LicenseWall } from '@/components/LicenseWall';
 
 export default function SmartSavingsPage() {
+  const { user } = useAuth();
+  const isLicenseActive = user?.license_status === 'active';
+
   const [goals, setGoals] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [goalToEdit, setGoalToEdit] = React.useState(null);
@@ -33,6 +38,7 @@ export default function SmartSavingsPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
 
   const fetchGoals = async () => {
+    if (!isLicenseActive) return;
     try {
       const response = await apiFetch('/api/goals');
       if (!response.ok) {
@@ -47,7 +53,7 @@ export default function SmartSavingsPage() {
 
   React.useEffect(() => {
     fetchGoals();
-  }, []);
+  }, [isLicenseActive]);
 
   const handleFormSubmit = (savedGoal) => {
     setGoals(prev =>
@@ -103,64 +109,66 @@ export default function SmartSavingsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Poupança Inteligente</h2>
         <div className="flex items-center space-x-2">
-          <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
+          <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick} disabled={!isLicenseActive}>
             <PlusCircle className="mr-2" />
             Nova Meta
           </Button>
         </div>
       </div>
 
-      {goals.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {goals.map((goal) => {
-            const percentage = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
-            return (
-              <Card key={goal.id}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-lg font-semibold">{goal.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Abrir menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditClick(goal)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteClick(goal)} className="text-red-500 focus:text-red-500">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Meta: <FormattedCurrency value={goal.target_amount} valueClasses="text-sm" symbolClasses="text-xs" />
-                  </p>
-                  <div className="text-2xl font-bold text-green-400">
-                    <FormattedCurrency value={goal.current_amount} />
-                  </div>
-                  <Progress value={percentage} className="mt-4 h-4" />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>{percentage.toFixed(1)}%</span>
-                    {goal.target_date && <span>Prazo: {formatDate(goal.target_date)}</span>}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-          <PiggyBank className="h-16 w-16 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Nenhuma meta de poupança definida.</p>
-          <Button variant="link" onClick={handleAddClick}>Crie sua primeira meta agora</Button>
-        </div>
-      )}
+      <LicenseWall isLicenseActive={isLicenseActive}>
+        {goals.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {goals.map((goal) => {
+              const percentage = goal.target_amount > 0 ? (goal.current_amount / goal.target_amount) * 100 : 0;
+              return (
+                <Card key={goal.id}>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-semibold">{goal.name}</CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditClick(goal)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(goal)} className="text-red-500 focus:text-red-500">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Meta: <FormattedCurrency value={goal.target_amount} valueClasses="text-sm" symbolClasses="text-xs" />
+                    </p>
+                    <div className="text-2xl font-bold text-green-400">
+                      <FormattedCurrency value={goal.current_amount} />
+                    </div>
+                    <Progress value={percentage} className="mt-4 h-4" />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                      <span>{percentage.toFixed(1)}%</span>
+                      {goal.target_date && <span>Prazo: {formatDate(goal.target_date)}</span>}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
+            <PiggyBank className="h-16 w-16 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Nenhuma meta de poupança definida.</p>
+            <Button variant="link" onClick={handleAddClick} disabled={!isLicenseActive}>Crie sua primeira meta agora</Button>
+          </div>
+        )}
+      </LicenseWall>
 
       <AddGoalForm
         open={isFormOpen}

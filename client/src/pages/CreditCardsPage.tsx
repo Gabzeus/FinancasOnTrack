@@ -25,8 +25,13 @@ import { FormattedCurrency } from '@/components/FormattedCurrency';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { InvoiceDialog } from '@/components/InvoiceDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { LicenseWall } from '@/components/LicenseWall';
 
 export default function CreditCardsPage() {
+  const { user } = useAuth();
+  const isLicenseActive = user?.license_status === 'active';
+
   const [cards, setCards] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
   const [cardToEdit, setCardToEdit] = React.useState(null);
@@ -37,6 +42,7 @@ export default function CreditCardsPage() {
   const { toast } = useToast();
 
   const fetchCards = async () => {
+    if (!isLicenseActive) return;
     try {
       const response = await apiFetch('/api/credit-cards');
       if (!response.ok) {
@@ -51,9 +57,10 @@ export default function CreditCardsPage() {
 
   React.useEffect(() => {
     fetchCards();
-  }, []);
+  }, [isLicenseActive]);
 
   React.useEffect(() => {
+    if (!isLicenseActive) return;
     cards.forEach(card => {
       const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
       if (percentage >= 90) {
@@ -64,7 +71,7 @@ export default function CreditCardsPage() {
         });
       }
     });
-  }, [cards, toast]);
+  }, [cards, toast, isLicenseActive]);
 
   const handleFormSubmit = (savedCard) => {
     fetchCards(); // Refetch to get updated spent amount
@@ -121,71 +128,73 @@ export default function CreditCardsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Meus Cartões de Crédito</h2>
         <div className="flex items-center space-x-2">
-           <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
+           <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick} disabled={!isLicenseActive}>
               <PlusCircle className="mr-2" />
               Adicionar Cartão
             </Button>
         </div>
       </div>
       
-      {cards.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {cards.map((card) => {
-            const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
-            return (
-              <Card key={card.id}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-lg font-semibold">{card.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Abrir menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewInvoiceClick(card)}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Ver Fatura
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEditClick(card)}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteClick(card)} className="text-red-500 focus:text-red-500">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      Limite: <FormattedCurrency value={card.limit_amount} valueClasses="text-sm" symbolClasses="text-xs" />
-                    </p>
-                    <div className="text-2xl font-bold text-red-400">
-                      <FormattedCurrency value={card.spent} />
+      <LicenseWall isLicenseActive={isLicenseActive}>
+        {cards.length > 0 ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {cards.map((card) => {
+              const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+              return (
+                <Card key={card.id}>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-semibold">{card.name}</CardTitle>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Abrir menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewInvoiceClick(card)}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Ver Fatura
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditClick(card)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteClick(card)} className="text-red-500 focus:text-red-500">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Limite: <FormattedCurrency value={card.limit_amount} valueClasses="text-sm" symbolClasses="text-xs" />
+                      </p>
+                      <div className="text-2xl font-bold text-red-400">
+                        <FormattedCurrency value={card.spent} />
+                      </div>
+                      <Progress value={percentage} className="h-4" indicatorClassName={getProgressColor(percentage)} />
+                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                        <span>{percentage.toFixed(1)}% usado</span>
+                        <span>
+                          Vencimento: dia {card.due_day}
+                        </span>
+                      </div>
                     </div>
-                    <Progress value={percentage} className="h-4" indicatorClassName={getProgressColor(percentage)} />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>{percentage.toFixed(1)}% usado</span>
-                      <span>
-                        Vencimento: dia {card.due_day}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
-          <p className="text-muted-foreground">Nenhum cartão de crédito cadastrado.</p>
-          <Button variant="link" onClick={handleAddClick}>Cadastre um agora</Button>
-        </div>
-      )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg">
+            <p className="text-muted-foreground">Nenhum cartão de crédito cadastrado.</p>
+            <Button variant="link" onClick={handleAddClick} disabled={!isLicenseActive}>Cadastre um agora</Button>
+          </div>
+        )}
+      </LicenseWall>
 
       <AddCreditCardForm
         open={isFormOpen}

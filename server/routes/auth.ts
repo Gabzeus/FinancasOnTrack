@@ -44,7 +44,7 @@ router.post('/register', async (req, res) => {
         role,
         license_status: licenseStatus,
       })
-      .returning(['id', 'email', 'role'])
+      .returning(['id', 'email', 'role', 'license_status'])
       .executeTakeFirstOrThrow();
 
     // Create default settings for the new user
@@ -53,11 +53,11 @@ router.post('/register', async (req, res) => {
         { user_id: newUser.id, key: 'credit_card_limit_alerts_enabled', value: 'true' },
     ]).execute();
 
-    const token = jwt.sign({ id: newUser.id, role: newUser.role }, JWT_SECRET, {
+    const token = jwt.sign({ id: newUser.id, role: newUser.role, license_status: newUser.license_status }, JWT_SECRET, {
       expiresIn: '30d',
     });
 
-    res.status(201).json({ token, user: { id: newUser.id, email: newUser.email, role: newUser.role } });
+    res.status(201).json({ token, user: { id: newUser.id, email: newUser.email, role: newUser.role, license_status: newUser.license_status } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
@@ -95,11 +95,11 @@ router.post('/login', async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, role: user.role, license_status: user.license_status }, JWT_SECRET, {
       expiresIn: '30d',
     });
 
-    res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role, license_status: user.license_status } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });

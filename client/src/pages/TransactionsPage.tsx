@@ -38,6 +38,8 @@ import {
 import { AddTransactionForm } from '@/components/AddTransactionForm';
 import { apiFetch } from '@/lib/api';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
+import { useAuth } from '@/contexts/AuthContext';
+import { LicenseWall } from '@/components/LicenseWall';
 
 const incomeCategories = ['Salário', 'Freelance', 'Investimentos', 'Outros'];
 const expenseCategories = [
@@ -53,6 +55,9 @@ const expenseCategories = [
 const allCategories = [...new Set([...incomeCategories, ...expenseCategories])];
 
 export default function TransactionsPage() {
+  const { user } = useAuth();
+  const isLicenseActive = user?.license_status === 'active';
+
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
   const [goals, setGoals] = React.useState([]);
@@ -69,6 +74,7 @@ export default function TransactionsPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
 
   const fetchData = async () => {
+    if (!isLicenseActive) return;
     try {
       const [transactionsRes, cardsRes, goalsRes] = await Promise.all([
         apiFetch('/api/transactions'),
@@ -91,7 +97,7 @@ export default function TransactionsPage() {
 
   React.useEffect(() => {
     fetchData();
-  }, []);
+  }, [isLicenseActive]);
 
   React.useEffect(() => {
     let result = transactions;
@@ -153,105 +159,107 @@ export default function TransactionsPage() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <h2 className="text-3xl font-bold tracking-tight">Transações</h2>
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-            <Input
-              placeholder="Filtrar por descrição..."
-              value={filters.description}
-              onChange={(e) => handleFilterChange('description', e.target.value)}
-            />
-            <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os Tipos</SelectItem>
-                <SelectItem value="income">Receita</SelectItem>
-                <SelectItem value="expense">Despesa</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {allCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead className="hidden sm:table-cell">Categoria</TableHead>
-                  <TableHead className="hidden md:table-cell">Data</TableHead>
-                  <TableHead className="hidden md:table-cell">Tipo</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((t) => (
-                    <TableRow key={t.id}>
-                      <TableCell className="font-medium">
-                        <div>{t.description}</div>
-                        {t.credit_card_name && <div className="text-xs text-muted-foreground">{t.credit_card_name}</div>}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
-                      <TableCell className="hidden md:table-cell">{formatDate(t.date)}</TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                          {t.type === 'income' ? 'Receita' : 'Despesa'}
-                        </span>
-                      </TableCell>
-                      <TableCell
-                        className={`font-medium ${
-                          t.type === 'income' ? 'text-green-400' : 'text-red-400'
-                        }`}
-                      >
-                        {t.type === 'income' ? '+' : '-'} <FormattedCurrency value={t.amount} valueClasses="text-sm" symbolClasses="text-xs" />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Abrir menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditClick(t)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-red-500 focus:text-red-500">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+      <LicenseWall isLicenseActive={isLicenseActive}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Filtros</CardTitle>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+              <Input
+                placeholder="Filtrar por descrição..."
+                value={filters.description}
+                onChange={(e) => handleFilterChange('description', e.target.value)}
+              />
+              <Select value={filters.type} onValueChange={(value) => handleFilterChange('type', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Tipos</SelectItem>
+                  <SelectItem value="income">Receita</SelectItem>
+                  <SelectItem value="expense">Despesa</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Categorias</SelectItem>
+                  {allCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+                    <TableHead className="hidden md:table-cell">Data</TableHead>
+                    <TableHead className="hidden md:table-cell">Tipo</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="font-medium">
+                          <div>{t.description}</div>
+                          {t.credit_card_name && <div className="text-xs text-muted-foreground">{t.credit_card_name}</div>}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
+                        <TableCell className="hidden md:table-cell">{formatDate(t.date)}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${t.type === 'income' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {t.type === 'income' ? 'Receita' : 'Despesa'}
+                          </span>
+                        </TableCell>
+                        <TableCell
+                          className={`font-medium ${
+                            t.type === 'income' ? 'text-green-400' : 'text-red-400'
+                          }`}
+                        >
+                          {t.type === 'income' ? '+' : '-'} <FormattedCurrency value={t.amount} valueClasses="text-sm" symbolClasses="text-xs" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditClick(t)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteClick(t)} className="text-red-500 focus:text-red-500">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">
+                        Nenhuma transação encontrada.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center h-24">
-                      Nenhuma transação encontrada.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </LicenseWall>
 
       <AddTransactionForm
         open={isFormOpen}

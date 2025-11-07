@@ -30,6 +30,8 @@ import {
 import { AddRecurringTransactionForm } from '@/components/AddRecurringTransactionForm';
 import { apiFetch } from '@/lib/api';
 import { FormattedCurrency } from '@/components/FormattedCurrency';
+import { useAuth } from '@/contexts/AuthContext';
+import { LicenseWall } from '@/components/LicenseWall';
 
 const frequencyMap = {
   daily: 'Diária',
@@ -39,6 +41,9 @@ const frequencyMap = {
 };
 
 export default function RecurringTransactionsPage() {
+  const { user } = useAuth();
+  const isLicenseActive = user?.license_status === 'active';
+
   const [recurring, setRecurring] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
@@ -47,6 +52,7 @@ export default function RecurringTransactionsPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
 
   const fetchData = async () => {
+    if (!isLicenseActive) return;
     try {
       const [recurringRes, cardsRes] = await Promise.all([
         apiFetch('/api/recurring-transactions'),
@@ -66,7 +72,7 @@ export default function RecurringTransactionsPage() {
 
   React.useEffect(() => {
     fetchData();
-  }, []);
+  }, [isLicenseActive]);
 
   const handleFormSubmit = (savedItem) => {
     setRecurring(prev =>
@@ -119,79 +125,81 @@ export default function RecurringTransactionsPage() {
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Transações Recorrentes</h2>
         <div className="flex items-center space-x-2">
-           <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick}>
+           <Button className="bg-primary hover:bg-primary/90" onClick={handleAddClick} disabled={!isLicenseActive}>
               <PlusCircle className="mr-2" />
               Nova Recorrência
             </Button>
         </div>
       </div>
-      <Card>
-        <CardContent className="pt-6">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Frequência</TableHead>
-                  <TableHead>Próxima</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recurring.length > 0 ? (
-                  recurring.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium">
-                        <div>{item.description}</div>
-                        <div className="text-xs text-muted-foreground">{item.category}</div>
-                      </TableCell>
-                      <TableCell>{frequencyMap[item.frequency]}</TableCell>
-                      <TableCell>{formatDate(item.start_date)}</TableCell>
-                      <TableCell
-                        className={`font-medium ${
-                          item.type === 'income' ? 'text-green-400' : 'text-red-400'
-                        }`}
-                      >
-                        {item.type === 'income' ? '+' : '-'} <FormattedCurrency value={item.amount} valueClasses="text-sm" symbolClasses="text-xs" />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Abrir menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditClick(item)}>
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Editar
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(item)} className="text-red-500 focus:text-red-500">
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Excluir
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+      <LicenseWall isLicenseActive={isLicenseActive}>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Frequência</TableHead>
+                    <TableHead>Próxima</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recurring.length > 0 ? (
+                    recurring.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                          <div>{item.description}</div>
+                          <div className="text-xs text-muted-foreground">{item.category}</div>
+                        </TableCell>
+                        <TableCell>{frequencyMap[item.frequency]}</TableCell>
+                        <TableCell>{formatDate(item.start_date)}</TableCell>
+                        <TableCell
+                          className={`font-medium ${
+                            item.type === 'income' ? 'text-green-400' : 'text-red-400'
+                          }`}
+                        >
+                          {item.type === 'income' ? '+' : '-'} <FormattedCurrency value={item.amount} valueClasses="text-sm" symbolClasses="text-xs" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Abrir menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditClick(item)}>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteClick(item)} className="text-red-500 focus:text-red-500">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Excluir
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center h-24">
+                        <div className="flex flex-col items-center justify-center">
+                          <Repeat className="h-12 w-12 text-muted-foreground mb-2" />
+                          Nenhuma transação recorrente encontrada.
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center h-24">
-                      <div className="flex flex-col items-center justify-center">
-                        <Repeat className="h-12 w-12 text-muted-foreground mb-2" />
-                        Nenhuma transação recorrente encontrada.
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </LicenseWall>
 
       <AddRecurringTransactionForm
         open={isFormOpen}

@@ -11,6 +11,7 @@ declare global {
       user?: {
         id: number;
         role: 'admin' | 'user';
+        license_status: 'active' | 'inactive' | 'expired';
       };
     }
   }
@@ -27,8 +28,8 @@ export const protect = (req: Request, res: Response, next: NextFunction) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number, role: 'admin' | 'user' };
-    req.user = { id: decoded.id, role: decoded.role };
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number, role: 'admin' | 'user', license_status: 'active' | 'inactive' | 'expired' };
+    req.user = { id: decoded.id, role: decoded.role, license_status: decoded.license_status };
     next();
   } catch (error) {
     res.status(401).json({ message: 'Não autorizado, token inválido' });

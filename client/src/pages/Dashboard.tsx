@@ -29,8 +29,13 @@ import { Progress } from '@/components/ui/progress';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { DateRange } from 'react-day-picker';
 import { subDays, startOfMonth, endOfMonth } from 'date-fns';
+import { useAuth } from '@/contexts/AuthContext';
+import { LicenseWall } from '@/components/LicenseWall';
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const isLicenseActive = user?.license_status === 'active';
+
   const [transactions, setTransactions] = React.useState([]);
   const [creditCards, setCreditCards] = React.useState([]);
   const [goals, setGoals] = React.useState([]);
@@ -43,6 +48,7 @@ export default function Dashboard() {
   });
 
   const fetchData = async () => {
+    if (!isLicenseActive) return;
     try {
       const [transactionsRes, cardsRes, goalsRes, recurringRes] = await Promise.all([
         apiFetch('/api/transactions'),
@@ -69,9 +75,10 @@ export default function Dashboard() {
 
   React.useEffect(() => {
     fetchData();
-  }, []);
+  }, [isLicenseActive]);
 
   React.useEffect(() => {
+    if (!isLicenseActive) return;
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const threeDaysFromNow = new Date(today);
@@ -105,7 +112,7 @@ export default function Dashboard() {
       }
     });
 
-  }, [recurring, creditCards, toast]);
+  }, [recurring, creditCards, toast, isLicenseActive]);
 
   const handleFormSubmit = (savedTransaction) => {
     fetchData();
@@ -161,7 +168,7 @@ export default function Dashboard() {
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
         <div className="flex items-center space-x-2">
            <DateRangePicker date={dateRange} setDate={setDateRange} />
-           <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)}>
+           <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsFormOpen(true)} disabled={!isLicenseActive}>
               <PlusCircle className="mr-2" />
               Adicionar Transação
             </Button>
@@ -175,126 +182,128 @@ export default function Dashboard() {
             />
         </div>
       </div>
-      <div className="space-y-4">
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <BalanceCard totalIncome={totalIncome} totalExpenses={totalExpenses} />
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-400">
-                <FormattedCurrency value={totalIncome} />
+      <LicenseWall isLicenseActive={isLicenseActive}>
+        <div className="space-y-4">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <BalanceCard totalIncome={totalIncome} totalExpenses={totalExpenses} />
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Receita</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-400">
+                  <FormattedCurrency value={totalIncome} />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Despesa</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-400">
+                  <FormattedCurrency value={totalExpenses} />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Despesas (Cartão)</CardTitle>
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-400">
+                  <FormattedCurrency value={cardExpenses} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+              <div className="lg:col-span-2 flex flex-col gap-4">
+                  <MonthlySummaryChart transactions={filteredTransactions} />
+                  <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                          <CardTitle>Transações Recentes</CardTitle>
+                          <Button asChild variant="link">
+                              <Link to="/transactions">Ver todas</Link>
+                          </Button>
+                      </CardHeader>
+                      <CardContent>
+                          <Table>
+                          <TableHeader>
+                              <TableRow>
+                              <TableHead>Descrição</TableHead>
+                              <TableHead className="hidden sm:table-cell">Categoria</TableHead>
+                              <TableHead className="hidden sm:table-cell">Data</TableHead>
+                              <TableHead className="text-right">Valor</TableHead>
+                              </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                              {filteredTransactions.length > 0 ? (
+                              filteredTransactions.slice(0, 5).map((t) => (
+                                  <TableRow key={t.id}>
+                                  <TableCell>
+                                    <div>{t.description}</div>
+                                    {t.credit_card_name && <div className="text-xs text-muted-foreground">{t.credit_card_name}</div>}
+                                  </TableCell>
+                                  <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
+                                  <TableCell className="hidden sm:table-cell">{formatDate(t.date)}</TableCell>
+                                  <TableCell
+                                      className={`text-right font-medium ${
+                                      t.type === 'income'
+                                          ? 'text-green-400'
+                                          : 'text-red-400'
+                                      }`}
+                                  >
+                                      {t.type === 'income' ? '+' : '-'}{' '}
+                                      <FormattedCurrency value={t.amount} valueClasses="text-sm" symbolClasses="text-xs" />
+                                  </TableCell>
+                                  </TableRow>
+                              ))
+                              ) : (
+                              <TableRow>
+                                  <TableCell colSpan={4} className="text-center h-24">
+                                  Nenhuma transação encontrada no período.
+                                  </TableCell>
+                              </TableRow>
+                              )}
+                          </TableBody>
+                          </Table>
+                      </CardContent>
+                  </Card>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Despesa</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-400">
-                <FormattedCurrency value={totalExpenses} />
+              <div className="lg:col-span-1 flex flex-col gap-4">
+                  <UpcomingBills recurringTransactions={recurring} />
+                  <Card>
+                      <CardHeader>
+                          <CardTitle>Limites de Cartão</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                          {creditCards.length > 0 ? creditCards.map(card => {
+                              const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
+                              return (
+                                  <div key={card.id}>
+                                      <div className="flex justify-between items-center mb-1">
+                                          <span className="text-sm font-medium">{card.name}</span>
+                                          <span className="text-xs text-muted-foreground">
+                                              <FormattedCurrency value={card.spent} /> / <FormattedCurrency value={card.limit_amount} />
+                                          </span>
+                                      </div>
+                                      <Progress value={percentage} className="h-3" indicatorClassName={getProgressColor(percentage)} />
+                                  </div>
+                              )
+                          }) : (
+                              <p className="text-sm text-muted-foreground text-center py-4">Nenhum cartão de crédito cadastrado.</p>
+                          )}
+                      </CardContent>
+                  </Card>
+                  <ExpenseChart transactions={filteredTransactions} />
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Despesas (Cartão)</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-400">
-                <FormattedCurrency value={cardExpenses} />
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         </div>
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-            <div className="lg:col-span-2 flex flex-col gap-4">
-                <MonthlySummaryChart transactions={filteredTransactions} />
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Transações Recentes</CardTitle>
-                        <Button asChild variant="link">
-                            <Link to="/transactions">Ver todas</Link>
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                        <TableHeader>
-                            <TableRow>
-                            <TableHead>Descrição</TableHead>
-                            <TableHead className="hidden sm:table-cell">Categoria</TableHead>
-                            <TableHead className="hidden sm:table-cell">Data</TableHead>
-                            <TableHead className="text-right">Valor</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredTransactions.length > 0 ? (
-                            filteredTransactions.slice(0, 5).map((t) => (
-                                <TableRow key={t.id}>
-                                <TableCell>
-                                  <div>{t.description}</div>
-                                  {t.credit_card_name && <div className="text-xs text-muted-foreground">{t.credit_card_name}</div>}
-                                </TableCell>
-                                <TableCell className="hidden sm:table-cell">{t.category}</TableCell>
-                                <TableCell className="hidden sm:table-cell">{formatDate(t.date)}</TableCell>
-                                <TableCell
-                                    className={`text-right font-medium ${
-                                    t.type === 'income'
-                                        ? 'text-green-400'
-                                        : 'text-red-400'
-                                    }`}
-                                >
-                                    {t.type === 'income' ? '+' : '-'}{' '}
-                                    <FormattedCurrency value={t.amount} valueClasses="text-sm" symbolClasses="text-xs" />
-                                </TableCell>
-                                </TableRow>
-                            ))
-                            ) : (
-                            <TableRow>
-                                <TableCell colSpan={4} className="text-center h-24">
-                                Nenhuma transação encontrada no período.
-                                </TableCell>
-                            </TableRow>
-                            )}
-                        </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
-            </div>
-            <div className="lg:col-span-1 flex flex-col gap-4">
-                <UpcomingBills recurringTransactions={recurring} />
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Limites de Cartão</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {creditCards.length > 0 ? creditCards.map(card => {
-                            const percentage = card.limit_amount > 0 ? (card.spent / card.limit_amount) * 100 : 0;
-                            return (
-                                <div key={card.id}>
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-sm font-medium">{card.name}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            <FormattedCurrency value={card.spent} /> / <FormattedCurrency value={card.limit_amount} />
-                                        </span>
-                                    </div>
-                                    <Progress value={percentage} className="h-3" indicatorClassName={getProgressColor(percentage)} />
-                                </div>
-                            )
-                        }) : (
-                            <p className="text-sm text-muted-foreground text-center py-4">Nenhum cartão de crédito cadastrado.</p>
-                        )}
-                    </CardContent>
-                </Card>
-                <ExpenseChart transactions={filteredTransactions} />
-            </div>
-        </div>
-      </div>
+      </LicenseWall>
     </div>
   );
 }
