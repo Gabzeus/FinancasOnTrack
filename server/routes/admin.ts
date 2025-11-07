@@ -3,6 +3,7 @@ import express from 'express';
 import { db } from '../db/database';
 import { protect, adminOnly } from '../middleware/auth';
 import { z } from 'zod';
+import { sendLicenseActivationEmail, sendLicenseDeactivationEmail } from '../services/emailService';
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ router.put('/users/:id/license', async (req, res) => {
     try {
         const { license_status, license_expiry_date } = licenseUpdateSchema.parse(req.body);
 
-        const user = await db.selectFrom('users').where('id', '=', userIdToUpdate).select('id').executeTakeFirst();
+        const user = await db.selectFrom('users').where('id', '=', userIdToUpdate).select(['id', 'email']).executeTakeFirst();
         if (!user) {
             res.status(404).json({ message: 'User not found' });
             return;
@@ -51,6 +52,13 @@ router.put('/users/:id/license', async (req, res) => {
             .where('id', '=', userIdToUpdate)
             .returning(['id', 'email', 'role', 'license_status', 'license_expiry_date'])
             .executeTakeFirstOrThrow();
+        
+        // Send email notification based on status change
+        if (license_status === 'active') {
+            sendLicenseActivationEmail(updatedUser.email, updatedUser.license_expiry_date);
+        } else if (license_status === 'inactive') {
+            sendLicenseDeactivationEmail(updatedUser.email);
+        }
 
         res.json(updatedUser);
 

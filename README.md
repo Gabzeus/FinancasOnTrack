@@ -29,7 +29,18 @@ npm install
 - **Frontend**: React com TypeScript e Vite.
 - **Backend**: Node.js com Express e TypeScript.
 
-### 4. Executando a Aplicação
+### 4. Conta de Administrador
+
+**Importante**: O sistema foi projetado para que o **primeiro usuário a se registrar** se torne automaticamente o administrador.
+
+Para criar sua conta de administrador:
+1.  Execute a aplicação (instruções abaixo).
+2.  Na tela de login, escolha a aba "Registar".
+3.  Crie sua conta com seu e-mail e uma senha de sua escolha.
+
+A senha que você definir durante o registro será a sua senha de administrador. Por razões de segurança, eu não tenho acesso a essa senha.
+
+### 5. Executando a Aplicação
 
 Para iniciar o servidor de desenvolvimento (backend) e o cliente (frontend) simultaneamente, execute o seguinte comando na raiz do projeto:
 

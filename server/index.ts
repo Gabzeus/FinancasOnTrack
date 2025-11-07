@@ -10,10 +10,12 @@ import recurringTransactionsRouter from './routes/recurringTransactions';
 import settingsRouter from './routes/settings';
 import adminRouter from './routes/admin';
 import { processRecurringTransactions } from './services/recurringProcessor.js';
+import { checkLicenseExpirations } from './services/licenseProcessor.js';
 
 dotenv.config();
 
 const app = express();
+const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
 
 // Body parsing middleware
 app.use(express.json());
@@ -30,16 +32,20 @@ app.use('/api/admin', adminRouter);
 
 // Function to set up and run the recurring transaction processor
 function setupRecurringProcessor() {
-  // Run once on startup
   processRecurringTransactions().catch(console.error);
-
-  // Then run every 24 hours
-  const twentyFourHoursInMs = 24 * 60 * 60 * 1000;
   setInterval(() => {
     processRecurringTransactions().catch(console.error);
   }, twentyFourHoursInMs);
-
   console.log('Recurring transaction processor scheduled to run every 24 hours.');
+}
+
+// Function to set up and run the license expiration checker
+function setupLicenseProcessor() {
+  checkLicenseExpirations().catch(console.error);
+  setInterval(() => {
+    checkLicenseExpirations().catch(console.error);
+  }, twentyFourHoursInMs);
+  console.log('License expiration processor scheduled to run every 24 hours.');
 }
 
 // Export a function to start the server
@@ -50,8 +56,9 @@ export async function startServer(port) {
     }
     app.listen(port, () => {
       console.log(`API Server running on port ${port}`);
-      // Setup the recurring processor after the server starts
+      // Setup scheduled jobs after the server starts
       setupRecurringProcessor();
+      setupLicenseProcessor();
     });
   } catch (err) {
     console.error('Failed to start server:', err);
