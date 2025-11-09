@@ -54,12 +54,14 @@ Após executar o comando:
 
 Abra seu navegador e acesse `http://localhost:3000` para ver a aplicação em funcionamento.
 
-### 6. Envio de Emails (Simulado)
+### 6. Envio de Notificações (Simulado)
 
-**Importante**: O sistema de envio de emails (para funcionalidades como "Esqueci a Senha") está **simulado** no ambiente de desenvolvimento.
+**Importante**: O sistema de envio de notificações (emails e WhatsApp) está **simulado** no ambiente de desenvolvimento.
 
-- **Como funciona?**: Em vez de enviar um email real, o sistema exibe o conteúdo do email (destinatário, assunto e corpo) diretamente no console do terminal onde o servidor backend (`npm start`) está rodando.
+- **Como funciona?**: Em vez de enviar uma mensagem real, o sistema exibe o conteúdo da notificação (destinatário, assunto e corpo) diretamente no console do terminal onde o servidor backend (`npm start`) está rodando.
 
-- **Preciso de um servidor SMTP?**: Para o ambiente de desenvolvimento, **não é necessário** configurar um servidor SMTP. Você pode testar a funcionalidade observando as saídas no console.
+- **Preciso de um servidor SMTP ou API do WhatsApp?**: Para o ambiente de desenvolvimento, **não é necessário** configurar nada. Você pode testar a funcionalidade observando as saídas no console.
 
-- **Para Produção**: Se você for implantar este projeto em um ambiente de produção e desejar enviar emails reais, será necessário substituir o serviço simulado em `server/services/emailService.ts` por uma implementação real, utilizando um provedor de email como SendGrid, Mailgun, ou o seu próprio servidor SMTP com a ajuda de uma biblioteca como `Nodemailer`.
+- **Para Produção**: Se você for implantar este projeto em um ambiente de produção e desejar enviar notificações reais, será necessário substituir os serviços simulados por implementações reais:
+    - **Emails**: Substitua a implementação em `server/services/emailService.ts` por uma real, utilizando um provedor como SendGrid, Mailgun, ou seu próprio servidor SMTP com a ajuda de uma biblioteca como `Nodemailer`.
+    - **WhatsApp**: Substitua a implementação em `server/services/whatsappService.ts` por uma integração real com uma API do WhatsApp (como a da Meta, Twilio, etc.). Você precisará adicionar as credenciais e o número de telefone de origem no arquivo `server/services/whatsappService.ts`, conforme indicado nos comentários do arquivo.

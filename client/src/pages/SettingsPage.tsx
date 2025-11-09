@@ -118,11 +118,13 @@ function ChangePasswordDialog() {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const [settings, setSettings] = React.useState({
     email_notifications_enabled: true,
     credit_card_limit_alerts_enabled: true,
+    whatsapp_notifications_enabled: true,
   });
+  const [whatsappNumber, setWhatsappNumber] = React.useState(user?.whatsapp_number || '');
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -134,7 +136,9 @@ export default function SettingsPage() {
         setSettings({
           email_notifications_enabled: data.email_notifications_enabled === 'true',
           credit_card_limit_alerts_enabled: data.credit_card_limit_alerts_enabled === 'true',
+          whatsapp_notifications_enabled: data.whatsapp_notifications_enabled === 'true',
         });
+        setWhatsappNumber(data.whatsapp_number || '');
       } catch (error) {
         console.error(error);
         toast({
@@ -157,9 +161,17 @@ export default function SettingsPage() {
     try {
       const response = await apiFetch('/api/settings', {
         method: 'PUT',
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ ...settings, whatsapp_number: whatsappNumber }),
       });
       if (!response.ok) throw new Error('Failed to save settings');
+      
+      // Update user in auth context
+      const updatedUser = { ...user, whatsapp_number: whatsappNumber };
+      const token = localStorage.getItem('authToken');
+      if (token && user) {
+        login(token, updatedUser as any);
+      }
+
       toast({
         title: 'Sucesso!',
         description: 'Configurações salvas com sucesso!',
@@ -205,6 +217,13 @@ export default function SettingsPage() {
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="seu@email.com" value={user?.email || ''} disabled />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp">Número do WhatsApp</Label>
+              <Input id="whatsapp" type="tel" placeholder="+5511999998888" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} />
+              <p className="text-sm text-muted-foreground">
+                Use o formato internacional (ex: +5511999998888).
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -227,6 +246,20 @@ export default function SettingsPage() {
                 onCheckedChange={(checked) => handleSettingChange('email_notifications_enabled', checked)}
               />
             </div>
+             <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="whatsapp-notifications" className="text-base">Notificações por WhatsApp</Label>
+                <p className="text-sm text-muted-foreground">
+                  Receba alertas e resumos no seu WhatsApp.
+                </p>
+              </div>
+              <Switch
+                id="whatsapp-notifications"
+                checked={settings.whatsapp_notifications_enabled}
+                onCheckedChange={(checked) => handleSettingChange('whatsapp_notifications_enabled', checked)}
+                disabled={!whatsappNumber}
+              />
+            </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label htmlFor="credit-card-limit-alerts" className="text-base">Alertas de Limite do Cartão</Label>
@@ -238,7 +271,7 @@ export default function SettingsPage() {
                 id="credit-card-limit-alerts"
                 checked={settings.credit_card_limit_alerts_enabled}
                 onCheckedChange={(checked) => handleSettingChange('credit_card_limit_alerts_enabled', checked)}
-                disabled={!settings.email_notifications_enabled}
+                disabled={!settings.email_notifications_enabled && !settings.whatsapp_notifications_enabled}
               />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">

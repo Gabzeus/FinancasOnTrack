@@ -47,20 +47,21 @@ router.post('/register', async (req, res) => {
         role,
         license_status: licenseStatus,
       })
-      .returning(['id', 'email', 'role', 'license_status'])
+      .returning(['id', 'email', 'role', 'license_status', 'whatsapp_number'])
       .executeTakeFirstOrThrow();
 
     // Create default settings for the new user
     await db.insertInto('settings').values([
         { user_id: newUser.id, key: 'email_notifications_enabled', value: 'true' },
         { user_id: newUser.id, key: 'credit_card_limit_alerts_enabled', value: 'true' },
+        { user_id: newUser.id, key: 'whatsapp_notifications_enabled', value: 'true' },
     ]).execute();
 
     const token = jwt.sign({ id: newUser.id, role: newUser.role, license_status: newUser.license_status }, JWT_SECRET, {
       expiresIn: '30d',
     });
 
-    res.status(201).json({ token, user: { id: newUser.id, email: newUser.email, role: newUser.role, license_status: newUser.license_status } });
+    res.status(201).json({ token, user: { id: newUser.id, email: newUser.email, role: newUser.role, license_status: newUser.license_status, whatsapp_number: newUser.whatsapp_number } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
@@ -102,7 +103,7 @@ router.post('/login', async (req, res) => {
       expiresIn: '30d',
     });
 
-    res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role, license_status: user.license_status } });
+    res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role, license_status: user.license_status, whatsapp_number: user.whatsapp_number } });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });

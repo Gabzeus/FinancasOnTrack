@@ -1,5 +1,6 @@
 
 import { db } from '../db/database';
+import { sendWhatsAppMessage } from './whatsappService';
 
 // Function to calculate the next date based on frequency
 const getNextDate = (currentDate: Date, frequency: 'daily' | 'weekly' | 'monthly' | 'yearly'): Date => {
@@ -20,6 +21,15 @@ const getNextDate = (currentDate: Date, frequency: 'daily' | 'weekly' | 'monthly
             break;
     }
     return nextDate;
+};
+
+const getDaysUntilDue = (dueDate: Date) => {
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setUTCHours(0, 0, 0, 0);
+    const diffTime = due.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
 export const processRecurringTransactions = async () => {
@@ -80,6 +90,32 @@ export const processRecurringTransactions = async () => {
             
             console.log(`Updated next occurrence for recurring transaction ID ${recurring.id} to ${nextDateString}`);
         }
+
+        // --- Send WhatsApp Alerts for upcoming bills ---
+        const threeDaysFromNow = new Date(today);
+        threeDaysFromNow.setUTCDate(today.getUTCDate() + 3);
+
+        const upcomingBills = await db.selectFrom('recurring_transactions as rt')
+            .innerJoin('users', 'users.id', 'rt.user_id')
+            .innerJoin('settings as s_whatsapp', 's_whatsapp.user_id', 'users.id')
+            .where('s_whatsapp.key', '=', 'whatsapp_notifications_enabled')
+            .where('s_whatsapp.value', '=', 'true')
+            .where('rt.type', '=', 'expense')
+            .where('rt.start_date', '>=', today.toISOString().split('T')[0])
+            .where('rt.start_date', '<=', threeDaysFromNow.toISOString().split('T')[0])
+            .where('users.whatsapp_number', 'is not', null)
+            .select(['users.whatsapp_number', 'rt.description', 'rt.amount', 'rt.start_date'])
+            .execute();
+
+        for (const bill of upcomingBills) {
+            if (bill.whatsapp_number) {
+                const daysUntil = getDaysUntilDue(new Date(bill.start_date));
+                const formattedAmount = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(bill.amount);
+                const message = `*Alerta FinTrack: Conta a Vencer* ⏰\n\nSua conta "*${bill.description}*" no valor de *${formattedAmount}* vence ${daysUntil === 0 ? 'hoje' : `em ${daysUntil} dia(s)`}.`;
+                sendWhatsAppMessage(bill.whatsapp_number, message);
+            }
+        }
+
     } catch (error) {
         console.error('Error processing recurring transactions:', error);
     }

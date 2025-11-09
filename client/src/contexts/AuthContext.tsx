@@ -6,6 +6,7 @@ interface User {
   email: string;
   role: 'admin' | 'user';
   license_status: 'active' | 'inactive' | 'expired';
+  whatsapp_number?: string | null;
 }
 
 interface AuthContextType {

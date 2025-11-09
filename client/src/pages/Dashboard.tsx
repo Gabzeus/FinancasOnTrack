@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DollarSign, CreditCard, PlusCircle } from 'lucide-react';
+import { DollarSign, CreditCard, PlusCircle, MessageSquare } from 'lucide-react';
 import { ExpenseChart } from '@/components/ExpenseChart';
 import { MonthlySummaryChart } from '@/components/MonthlySummaryChart';
 import { Link } from 'react-router-dom';
@@ -162,6 +162,32 @@ export default function Dashboard() {
     return 'bg-primary';
   };
 
+  const handleSendWhatsAppSummary = async () => {
+    try {
+      const response = await apiFetch('/api/notifications/send-summary', {
+        method: 'POST',
+        body: JSON.stringify({
+          startDate: dateRange?.from?.toISOString(),
+          endDate: dateRange?.to?.toISOString(),
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Falha ao enviar resumo.');
+      }
+      toast({
+        title: 'Sucesso!',
+        description: 'Resumo enviado para o seu WhatsApp.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
@@ -300,6 +326,22 @@ export default function Dashboard() {
                       </CardContent>
                   </Card>
                   <ExpenseChart transactions={filteredTransactions} />
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Notificações</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Button onClick={handleSendWhatsAppSummary} className="w-full" disabled={!user?.whatsapp_number}>
+                        <MessageSquare className="mr-2" />
+                        Enviar Resumo por WhatsApp
+                      </Button>
+                      {!user?.whatsapp_number && (
+                        <p className="text-xs text-muted-foreground mt-2 text-center">
+                          Adicione seu número de WhatsApp nas <Link to="/settings" className="underline">configurações</Link> para usar este recurso.
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
               </div>
           </div>
         </div>

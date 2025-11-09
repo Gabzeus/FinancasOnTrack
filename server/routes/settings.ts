@@ -14,15 +14,25 @@ router.use(protect);
 router.get('/', async (req, res) => {
   const userId = req.user!.id;
   try {
-    const settings = await db.selectFrom('settings')
+    const settingsPromise = db.selectFrom('settings')
       .where('user_id', '=', userId)
       .selectAll()
       .execute();
       
+    const userPromise = db.selectFrom('users')
+        .where('id', '=', userId)
+        .select('whatsapp_number')
+        .executeTakeFirst();
+
+    const [settings, user] = await Promise.all([settingsPromise, userPromise]);
+
     const settingsObj = settings.reduce((acc, setting) => {
       acc[setting.key] = setting.value;
       return acc;
     }, {});
+
+    settingsObj.whatsapp_number = user?.whatsapp_number || '';
+
     res.json(settingsObj);
   } catch (error) {
     console.error('Failed to fetch settings:', error);
@@ -33,15 +43,24 @@ router.get('/', async (req, res) => {
 // Update settings for the logged-in user
 router.put('/', async (req, res) => {
   const userId = req.user!.id;
-  const settingsToUpdate: Record<string, string> = req.body;
+  const { whatsapp_number, ...settingsToUpdate } = req.body;
 
-  if (!settingsToUpdate || Object.keys(settingsToUpdate).length === 0) {
+  if (!settingsToUpdate && whatsapp_number === undefined) {
     res.status(400).json({ message: 'No settings to update provided' });
     return;
   }
 
   try {
     await db.transaction().execute(async (trx) => {
+      // Update user-specific fields like whatsapp_number
+      if (whatsapp_number !== undefined) {
+        await trx.updateTable('users')
+          .set({ whatsapp_number: whatsapp_number || null })
+          .where('id', '=', userId)
+          .execute();
+      }
+
+      // Update key-value settings
       for (const key in settingsToUpdate) {
         const value = String(settingsToUpdate[key]);
         await trx

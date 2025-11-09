@@ -11,6 +11,7 @@ export interface UsersTable {
   license_expiry_date: string | null;
   password_reset_token: string | null;
   password_reset_expires: string | null;
+  whatsapp_number: string | null;
 }
 
 export interface TransactionsTable {
