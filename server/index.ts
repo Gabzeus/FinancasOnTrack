@@ -10,6 +10,7 @@ import recurringTransactionsRouter from './routes/recurringTransactions';
 import settingsRouter from './routes/settings';
 import adminRouter from './routes/admin';
 import notificationsRouter from './routes/notifications';
+import analyticsRouter from './routes/analytics';
 import { processRecurringTransactions } from './services/recurringProcessor.js';
 import { checkLicenseExpirations } from './services/licenseProcessor.js';
 
@@ -31,6 +32,7 @@ app.use('/api/recurring-transactions', recurringTransactionsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/analytics', analyticsRouter);
 
 // Function to set up and run the recurring transaction processor
 function setupRecurringProcessor() {

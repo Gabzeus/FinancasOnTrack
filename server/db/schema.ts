@@ -63,6 +63,31 @@ export interface SettingsTable {
   value: string;
 }
 
+export interface CategoryFeedbackTable {
+  id: Generated<number>;
+  user_id: number;
+  original_description: string;
+  user_provided_category: string;
+  ai_suggested_category: string | null;
+  timestamp: Generated<string>;
+}
+
+export interface SpendingLimitsTable {
+  id: Generated<number>;
+  user_id: number;
+  category: string;
+  limit_amount: number;
+  period: 'daily' | 'weekly' | 'monthly';
+}
+
+export interface WhatsappReportsTable {
+  id: Generated<number>;
+  user_id: number;
+  report_type: 'daily' | 'weekly' | 'monthly' | 'alert';
+  sent_at: Generated<string>;
+  message_content: string;
+}
+
 export interface Database {
   users: UsersTable;
   transactions: TransactionsTable;
@@ -70,4 +95,7 @@ export interface Database {
   goals: GoalsTable;
   recurring_transactions: RecurringTransactionsTable;
   settings: SettingsTable;
+  category_feedback: CategoryFeedbackTable;
+  spending_limits: SpendingLimitsTable;
+  whatsapp_reports: WhatsappReportsTable;
 }

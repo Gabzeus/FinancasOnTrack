@@ -3,6 +3,7 @@ import express from 'express';
 import { db } from '../db/database';
 import { sql } from 'kysely';
 import { protect } from '../middleware/auth';
+import { categorizeTransaction } from '../services/categorizationService';
 
 const router = express.Router();
 

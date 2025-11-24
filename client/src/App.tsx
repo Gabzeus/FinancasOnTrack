@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Wallet, List, Menu, CreditCard, PiggyBank, Repeat, Settings, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Wallet, List, Menu, CreditCard, PiggyBank, Repeat, Settings, LogOut, ShieldCheck, TrendingUp } from 'lucide-react';
 import Dashboard from './pages/Dashboard';
 import TransactionsPage from './pages/TransactionsPage';
 import CreditCardsPage from './pages/CreditCardsPage';
@@ -10,6 +10,7 @@ import RecurringTransactionsPage from './pages/RecurringTransactionsPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import AdminPage from './pages/AdminPage';
+import { FinancialAnalyticsPage } from './pages/FinancialAnalyticsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
 import { useAuth } from './contexts/AuthContext';
@@ -90,6 +91,19 @@ function SidebarNav() {
         <PiggyBank className="h-4 w-4" />
         Poupança Inteligente
       </NavLink>
+      <NavLink
+        to="/analytics"
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
+            isActive && 'bg-muted text-primary',
+          )
+        }
+      >
+        <TrendingUp className="h-4 w-4" />
+        Análise Financeira
+      </NavLink>
+
       {user?.role === 'admin' && (
         <NavLink
           to="/admin"
@@ -210,6 +224,7 @@ function MainLayout() {
             <Route path="/recurring" element={<RecurringTransactionsPage />} />
             <Route path="/credit-cards" element={<CreditCardsPage />} />
             <Route path="/smart-savings" element={<SmartSavingsPage />} />
+            <Route path="/analytics" element={<FinancialAnalyticsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminPage />} />
