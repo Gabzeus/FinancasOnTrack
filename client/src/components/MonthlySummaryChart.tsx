@@ -1,8 +1,15 @@
 
 import * as React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { format, parseISO } from 'date-fns';
+
+interface MonthlyDataItem {
+  name: string;
+  income: number;
+  expense: number;
+  date: Date;
+}
 
 export function MonthlySummaryChart({ transactions }) {
   const monthlyData = React.useMemo(() => {
@@ -13,9 +20,9 @@ export function MonthlySummaryChart({ transactions }) {
       }
       acc[month][t.type] += t.amount;
       return acc;
-    }, {});
+    }, {} as Record<string, MonthlyDataItem>);
 
-    return Object.values(data).sort((a, b) => a.date - b.date);
+    return Object.values(data).sort((a: MonthlyDataItem, b: MonthlyDataItem) => a.date.getTime() - b.date.getTime());
   }, [transactions]);
 
   if (monthlyData.length === 0) {
@@ -43,7 +50,7 @@ export function MonthlySummaryChart({ transactions }) {
               <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
               <XAxis dataKey="name" />
               <YAxis tickFormatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', notation: 'compact' }).format(value)} />
-              <Tooltip formatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)} />
+              <Tooltip formatter={(value) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value))} />
               <Legend />
               <Bar dataKey="income" fill="#00C49F" name="Receita" />
               <Bar dataKey="expense" fill="#FF8042" name="Despesa" />

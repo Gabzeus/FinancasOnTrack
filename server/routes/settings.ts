@@ -29,9 +29,9 @@ router.get('/', async (req, res) => {
     const settingsObj = settings.reduce((acc, setting) => {
       acc[setting.key] = setting.value;
       return acc;
-    }, {});
+    }, {} as Record<string, string>);
 
-    settingsObj.whatsapp_number = user?.whatsapp_number || '';
+    (settingsObj as any).whatsapp_number = user?.whatsapp_number || '';
 
     res.json(settingsObj);
   } catch (error) {
@@ -115,7 +115,7 @@ router.put('/change-password', async (req, res) => {
 
     } catch (error) {
         if (error instanceof z.ZodError) {
-            res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+            res.status(400).json({ message: error.issues.map(e => e.message).join(', ') });
             return;
         }
         console.error('Failed to change password:', error);

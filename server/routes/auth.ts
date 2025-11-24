@@ -64,7 +64,7 @@ router.post('/register', async (req, res) => {
     res.status(201).json({ token, user: { id: newUser.id, email: newUser.email, role: newUser.role, license_status: newUser.license_status, whatsapp_number: newUser.whatsapp_number } });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+      res.status(400).json({ message: error.issues.map(e => e.message).join(', ') });
       return;
     }
     console.error('Falha ao registar utilizador:', error);
@@ -106,7 +106,7 @@ router.post('/login', async (req, res) => {
     res.status(200).json({ token, user: { id: user.id, email: user.email, role: user.role, license_status: user.license_status, whatsapp_number: user.whatsapp_number } });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+      res.status(400).json({ message: error.issues.map(e => e.message).join(', ') });
       return;
     }
     console.error('Falha ao fazer login:', error);
@@ -145,7 +145,7 @@ router.post('/forgot-password', async (req, res) => {
     res.status(200).json({ message: 'Se um utilizador com este email existir, um link para redefinir a senha foi enviado.' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+      res.status(400).json({ message: error.issues.map(e => e.message).join(', ') });
       return;
     }
     console.error('Forgot password error:', error);
@@ -188,7 +188,7 @@ router.post('/reset-password', async (req, res) => {
     res.status(200).json({ message: 'Senha redefinida com sucesso.' });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+      res.status(400).json({ message: error.issues.map(e => e.message).join(', ') });
       return;
     }
     console.error('Reset password error:', error);

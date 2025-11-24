@@ -21,7 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet';
+} from './components/ui/sheet';
 import { Button } from './components/ui/button';
 import { Toaster } from './components/ui/toaster';
 import ResetPasswordPage from './pages/ResetPasswordPage';

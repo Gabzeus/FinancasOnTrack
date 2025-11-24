@@ -38,13 +38,17 @@ export function FinancialAnalyticsPage() {
         credentials: "include"
       });
       
-      if (!response.ok) throw new Error("Failed to fetch summary");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+        throw new Error(errorData.message || "Failed to fetch summary");
+      }
       
       const data = await response.json();
       setSummary(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao carregar dados");
-      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Erro ao carregar dados";
+      setError(errorMessage);
+      console.error("Failed to fetch summary:", errorMessage, err);
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +94,7 @@ export function FinancialAnalyticsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 lg:p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Análise Financeira</h1>
         <p className="text-gray-600">Visualize seus gastos e configure limites de orçamento</p>

@@ -73,7 +73,7 @@ router.put('/users/:id', async (req, res) => {
 
     } catch (error) {
         if (error instanceof z.ZodError) {
-            res.status(400).json({ message: error.errors.map(e => e.message).join(', ') });
+            res.status(400).json({ message: error.issues.map(e => e.message).join(', ') });
             return;
         }
         console.error('Failed to update user:', error);
